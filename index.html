@@ -78,29 +78,36 @@
           <h2 class="text-base font-bold text-slate-800">📦 Inventory & Real-Time POS Check</h2>
           <p class="text-xs text-slate-500">Deduct items instantly upon checkout or view FIFO rotation.</p>
         </div>
-        <select id="sort-mode" onchange="renderInventoryStock()" class="text-xs border rounded-lg px-2 py-1.5 bg-slate-50 font-bold text-slate-700">
-          <option value="fifo">FIFO (Oldest First)</option>
-          <option value="expiry">Closest Expiry First</option>
-          <option value="demand">Sort by Demand Status</option>
-        </select>
+        <div class="flex items-center gap-2">
+          <button onclick="clearAllData()" class="text-xs bg-red-100 text-red-700 hover:bg-red-200 px-2.5 py-1.5 rounded-lg font-bold border border-red-200 transition">
+            🗑️ Clear Data
+          </button>
+          <select id="sort-mode" onchange="renderInventoryStock()" class="text-xs border rounded-lg px-2 py-1.5 bg-slate-50 font-bold text-slate-700">
+            <option value="fifo">FIFO (Oldest First)</option>
+            <option value="expiry">Closest Expiry First</option>
+            <option value="demand">Sort by Demand Status</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Quick-Sell POS Counter Bar -->
-      <div class="bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-xl flex flex-col sm:flex-row gap-2 items-center justify-between">
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <span class="text-lg">⚡</span>
-          <div>
-            <h3 class="text-xs font-bold text-emerald-900">Instant Counter POS Sale</h3>
-            <p class="text-[10px] text-emerald-700">Tap to instantly deduct from oldest stock (FIFO).</p>
-          </div>
-        </div>
-        <div class="flex gap-2 w-full sm:w-auto">
-          <select id="pos-quick-item" class="flex-1 sm:w-48 text-xs border border-emerald-300 rounded-lg px-2.5 py-1.5 bg-white font-medium">
-            <option value="">Select item to sell...</option>
-          </select>
-          <button onclick="executePosQuickSale()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition whitespace-nowrap">Sell 1 Unit</button>
-        </div>
-      </div>
+     <!-- Quick-Sell POS Counter Bar -->
+<div class="bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-xl flex flex-col sm:flex-row gap-2 items-center justify-between">
+  <div class="flex items-center gap-2 w-full sm:w-auto">
+    <span class="text-lg">⚡</span>
+    <div>
+      <h3 class="text-xs font-bold text-emerald-900">Instant Counter POS Sale</h3>
+      <p class="text-[10px] text-emerald-700">Tap to instantly deduct sold quantity from oldest stock (FIFO).</p>
+    </div>
+  </div>
+  <div class="flex gap-2 w-full sm:w-auto">
+    <select id="pos-quick-item" class="flex-1 sm:w-48 text-xs border border-emerald-300 rounded-lg px-2.5 py-1.5 bg-white font-medium">
+      <option value="">Select item to sell...</option>
+    </select>
+    <!-- Dynamic Quantity Input -->
+    <input id="pos-quick-qty" type="number" min="1" value="1" placeholder="Qty" class="w-16 text-xs text-center border border-emerald-300 rounded-lg py-1.5 bg-white font-bold">
+    <button onclick="executePosQuickSale()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition whitespace-nowrap">Deduct Sale</button>
+  </div>
+</div>
 
       <!-- Inventory Movement Widgets -->
       <div class="grid grid-cols-3 gap-2">
@@ -426,21 +433,29 @@
     }
 
     function executePosQuickSale() {
-      const select = document.getElementById('pos-quick-item');
-      const batchId = parseFloat(select.value);
-      if (!batchId) return alert("Please select an item to sell from the dropdown!");
+  const select = document.getElementById('pos-quick-item');
+  const batchId = parseFloat(select.value);
+  const qtyToSell = parseInt(document.getElementById('pos-quick-qty').value) || 1;
 
-      const batch = inventoryQueue.find(b => b.id === batchId);
-      if (batch && batch.qty_remaining > 0) {
-        batch.qty_remaining -= 1;
-        localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
-        renderInventoryStock();
-        checkExpiryWarnings();
-        alert(`Sold 1 unit of ${batch.item}. Remaining: ${batch.qty_remaining}`);
-      } else {
-        alert("Selected item is already sold out!");
-      }
+  if (!batchId) return alert("Please select an item to sell from the dropdown!");
+  if (qtyToSell <= 0) return alert("Please enter a valid quantity to sell!");
+
+  const batch = inventoryQueue.find(b => b.id === batchId);
+  if (batch) {
+    if (batch.qty_remaining >= qtyToSell) {
+      batch.qty_remaining -= qtyToSell;
+      localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
+      renderInventoryStock();
+      checkExpiryWarnings();
+      alert(`Deducted ${qtyToSell} unit(s) of ${batch.item}. Remaining stock: ${batch.qty_remaining}`);
+      document.getElementById('pos-quick-qty').value = "1"; // Reset back to default 1
+    } else {
+      alert(`Cannot sell ${qtyToSell} unit(s). Only ${batch.qty_remaining} remaining in this stock batch!`);
     }
+  } else {
+    alert("Selected item not found!");
+  }
+}
 
     function renderInventoryStock() {
       const tbody = document.getElementById('inventory-table-body');
@@ -662,18 +677,18 @@
     function confirmAndSaveScannedBatches() {
       pendingScannedBatches.forEach((batch, idx) => {
         const exactDate = document.getElementById(`review-expiry-${idx}`).value;
+        // Safely reads qty_supplied, qty, or defaults to 1
+        const quantity = parseInt(batch.qty_supplied || batch.qty || batch.quantity) || 1;
 
-        // Add to expense list
-        receiptItems.push({ vendor: batch.vendor, amount: batch.amount });
+        receiptItems.push({ vendor: batch.vendor, amount: batch.amount || 0 });
 
-        // Add to inventory batch queue
         inventoryQueue.push({
           id: Date.now() + Math.random(),
           date: new Date().toLocaleDateString(),
-          item: batch.item,
+          item: batch.item || "Scanned Product",
           vendor: batch.vendor || "Supplier",
-          qty_supplied: batch.qty,
-          qty_remaining: batch.qty,
+          qty_supplied: quantity,
+          qty_remaining: quantity,
           expiry: exactDate,
           demand: "normal",
           timestamp: Date.now()
@@ -685,10 +700,9 @@
       renderInventoryStock();
       checkExpiryWarnings();
       closeExpiryReviewModal();
-      alert("Scanned items confirmed, logged to expenses, and added to FIFO inventory!");
+      alert("Scanned items confirmed and added to inventory!");
       switchTab('inventory');
     }
-
     function handleZReportUpload(event) {
       const status = document.getElementById('scan-status');
       status.innerText = "Parsing daily Z-Report statement...";
@@ -835,6 +849,16 @@
     function handleSignup() {
       handleLogin();
     }
-  </script>
+    
+    function clearAllData() {
+      if (confirm("Are you sure you want to clear all stored inventory batches and reset?")) {
+        localStorage.clear();
+        inventoryQueue = [];
+        receiptItems = [];
+        alert("All data cleared! Reloading page...");
+        location.reload();
+      }
+    }
+  </script> <!-- Closing script tag goes AFTER the function -->
 </body>
 </html>
