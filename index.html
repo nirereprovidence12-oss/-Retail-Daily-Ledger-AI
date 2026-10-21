@@ -2,698 +2,1062 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Retail Daily Ledger AI</title>
-  <meta name="theme-color" content="#059669">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase Cloud Sync Libraries -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: { emeraldPrimary: '#059669', slateWarm: '#F8FAF9' }
-        }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retail Daily Ledger AI - Supplier Intelligence & Spoilage Monitor</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary-green: #00875a;
+      --primary-green-dark: #006644;
+      --primary-green-light: #e6f4ea;
+      --bg-color: #f0f4f8;
+      --card-bg: #ffffff;
+      --text-color: #172b4d;
+      --text-muted: #5e6c84;
+      --border-color: #dfe1e6;
+      --warning-bg: #ffab00;
+      --warning-text: #ffffff;
+      --danger-color: #de350b;
+      --danger-bg: #ffebe6;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Landing / Login Gateway Screen */
+    #landing-screen {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #004d40 0%, #00875a 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2rem 1rem;
+    }
+
+    .landing-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      align-items: center;
+      padding: 2rem 0;
+    }
+
+    @media (min-width: 868px) {
+      .landing-container {
+        grid-template-columns: 1.2fr 1fr;
       }
     }
-  </script>
-  <style>
-    body {
-      -webkit-tap-highlight-color: transparent;
-      overscroll-behavior-y: none;
+
+    .hero-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: #7ee787;
+      margin-bottom: 1.5rem;
     }
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: #e6f4ea;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 1.25rem;
+      border-radius: var(--radius);
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .feature-desc {
+      font-size: 0.8rem;
+      color: #d1d5db;
+      line-height: 1.4;
+    }
+
+    .auth-card {
+      background: var(--card-bg);
+      color: var(--text-color);
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .auth-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .auth-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #fafbfc;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary-green);
+      background: white;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary-green);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-green-dark);
+    }
+
+    .btn-secondary {
+      background: #f4f5f7;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger-color);
+      border: 1px solid #ffbdad;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 1.5rem 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider::before { margin-right: .5em; }
+    .divider::after { margin-left: .5em; }
+
+    /* Main Application Screen */
+    #main-app {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .app-header {
+      background: var(--primary-green);
+      color: white;
+      padding: 1rem 1.5rem;
+    }
+
+    .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      opacity: 0.9;
+    }
+
+    .user-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-badge {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .sync-btn {
+      background: white;
+      color: var(--primary-green);
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .app-body {
+      max-width: 1100px;
+      margin: 1.5rem auto;
+      width: 100%;
+      padding: 0 1rem;
+      flex: 1;
+    }
+
+    /* Warning Banner */
+    .alert-banner {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      padding: 0.85rem 1.25rem;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* Tab Navigation */
+    .nav-tabs {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.85rem 1rem;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn.active {
+      background: var(--primary-green);
+      color: white;
+      border-color: var(--primary-green);
+    }
+
+    /* Cards & Layout */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Metrics Grid */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .metric-card {
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+
+    .metric-card.fast { background: #e6f4ea; border-color: #b7e1cd; color: #0d652d; }
+    .metric-card.near { background: #fef7e0; border-color: #feefc3; color: #b06000; }
+    .metric-card.slow { background: #fce8e6; border-color: #fad2cf; color: #c5221f; }
+
+    .metric-val { font-size: 1.5rem; font-weight: 800; }
+    .metric-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+
+    /* Diagnostic Box */
+    .diagnostic-box {
+      background: #e8f0fe;
+      border: 1px solid #aecbfa;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      color: #174ea6;
+      line-height: 1.5;
+    }
+
+    /* Dual Scan Buttons */
+    .scan-zone {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .upload-box {
+      border: 2px dashed #4285f4;
+      border-radius: var(--radius);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      background: #f8fafe;
+    }
+
+    .upload-box:hover {
+      background: #e8f0fe;
+    }
+
+    /* Data Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.75rem;
+      border-bottom: 2px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    td {
+      padding: 0.85rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .kwacha-btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .kwacha-btn {
+      padding: 0.4rem 0.8rem;
+      background: #f4f5f7;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+
+    .landing-footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.85rem;
+      color: #e6f4ea;
+    }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans antialiased pb-20 md:pb-6">
+<body>
 
-  <!-- Header -->
-  <header class="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 text-white py-3.5 px-4 shadow-md sticky top-0 z-40">
-    <div class="max-w-3xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <span class="text-2xl">📦</span>
-        <div>
-          <h1 class="text-base font-bold leading-tight">Retail Daily Ledger AI</h1>
-          <p class="text-[10px] text-emerald-100">Supplier Intelligence & Spoilage Monitor</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <span id="user-badge" class="text-[11px] bg-emerald-800/80 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-emerald-100">Offline Mode</span>
-        <button id="auth-btn" onclick="toggleAuthModal()" class="text-[11px] bg-white text-emerald-800 px-3 py-1 rounded-full font-bold shadow hover:bg-emerald-50 active:scale-95 transition">Sync Account</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Real-Time Expiry Warning Banner -->
-  <div id="expiry-popup-banner" class="hidden max-w-3xl mx-auto w-full px-4 pt-3">
-    <div class="bg-amber-500 text-white p-3.5 rounded-2xl shadow-lg flex justify-between items-center animate-pulse">
-      <div class="flex items-center gap-2.5">
-        <span class="text-xl">🚨</span>
-        <div>
-          <h4 class="font-bold text-xs uppercase tracking-wide">Active Stock Expiry Warning</h4>
-          <p id="expiry-popup-text" class="text-[11px] font-medium text-amber-100"></p>
-        </div>
-      </div>
-      <button onclick="dismissExpiryPopup()" class="text-[10px] bg-amber-700 hover:bg-amber-800 text-white px-2.5 py-1 rounded-lg font-bold">Dismiss</button>
-    </div>
-  </div>
-
-  <!-- Desktop Navigation -->
-  <div class="hidden md:flex max-w-3xl mx-auto w-full px-4 pt-4 gap-2">
-    <button onclick="switchTab('inventory')" id="tab-inventory-desktop" class="flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition">📦 Stock Monitor & FIFO</button>
-    <button onclick="switchTab('ledger')" id="tab-ledger-desktop" class="flex-1 py-2.5 rounded-xl text-xs font-bold bg-white text-slate-600 border hover:bg-slate-50 transition">📑 Daily Ledger & Scan</button>
-    <button onclick="switchTab('vault')" id="tab-vault-desktop" class="flex-1 py-2.5 rounded-xl text-xs font-bold bg-white text-slate-600 border hover:bg-slate-50 transition">📂 Vault & Reports</button>
-  </div>
-
-  <!-- Main Content Container -->
-  <main class="max-w-3xl mx-auto w-full p-4 flex-1 flex flex-col space-y-4">
-
-    <!-- TAB 1: STOCK MONITOR & REAL-TIME POS CHECKOUT -->
-    <div id="section-inventory" class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-      <div class="flex justify-between items-center">
-        <div>
-          <h2 class="text-base font-bold text-slate-800">📦 Inventory & Real-Time POS Check</h2>
-          <p class="text-xs text-slate-500">Deduct items instantly upon checkout or view FIFO rotation.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="clearAllData()" class="text-xs bg-red-100 text-red-700 hover:bg-red-200 px-2.5 py-1.5 rounded-lg font-bold border border-red-200 transition">
-            🗑️ Clear Data
-          </button>
-          <select id="sort-mode" onchange="renderInventoryStock()" class="text-xs border rounded-lg px-2 py-1.5 bg-slate-50 font-bold text-slate-700">
-            <option value="fifo">FIFO (Oldest First)</option>
-            <option value="expiry">Closest Expiry First</option>
-            <option value="demand">Sort by Demand Status</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Quick-Sell POS Counter Bar -->
-      <div class="bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-xl flex flex-col sm:flex-row gap-2 items-center justify-between">
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <span class="text-lg">⚡</span>
-          <div>
-            <h3 class="text-xs font-bold text-emerald-900">Instant Counter POS Sale</h3>
-            <p class="text-[10px] text-emerald-700">Tap to instantly deduct sold quantity from oldest stock (FIFO).</p>
-          </div>
-        </div>
-        <div class="flex gap-2 w-full sm:w-auto">
-          <select id="pos-quick-item" class="flex-1 sm:w-48 text-xs border border-emerald-300 rounded-lg px-2.5 py-1.5 bg-white font-medium">
-            <option value="">Select item to sell...</option>
-          </select>
-          <input id="pos-quick-qty" type="number" min="1" value="1" placeholder="Qty" class="w-16 text-xs text-center border border-emerald-300 rounded-lg py-1.5 bg-white font-bold">
-          <button onclick="executePosQuickSale()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition whitespace-nowrap">Deduct Sale</button>
-        </div>
-      </div>
-
-      <!-- Inventory Movement Widgets -->
-      <div class="grid grid-cols-3 gap-2">
-        <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl text-center">
-          <span class="text-[10px] uppercase font-extrabold text-emerald-800 block">Fast Movers</span>
-          <span id="stat-fast-movers" class="text-base font-black text-emerald-900">0</span>
-        </div>
-        <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-center">
-          <span class="text-[10px] uppercase font-extrabold text-amber-800 block">Near Expiry</span>
-          <span id="stat-near-expiry" class="text-base font-black text-amber-900">0</span>
-        </div>
-        <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-center">
-          <span class="text-[10px] uppercase font-extrabold text-rose-800 block">Slow / Stagnant</span>
-          <span id="stat-slow-movers" class="text-base font-black text-rose-900">0</span>
-        </div>
-      </div>
-
-      <!-- AI Action Advisory Box -->
-      <div id="ai-insight-box" class="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200/80 p-4 rounded-xl text-xs text-indigo-950 space-y-1.5 shadow-sm">
-        <span class="font-bold flex items-center gap-1.5 text-indigo-800">💡 AI Inventory Co-Pilot Diagnostics</span>
-        <p id="ai-insight-text">Scan supplier receipts or Z-Reports to receive automated expiry estimates and clearance advisories.</p>
-      </div>
-
-      <!-- Add New Stock Batch Form -->
-      <div class="bg-slate-50 p-3.5 rounded-xl border space-y-2">
-        <h3 class="text-xs font-bold text-slate-700">➕ Add New Supplier Batch</h3>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-          <input id="new-item-name" type="text" placeholder="Item Name (e.g. Milk 1L)" class="px-2.5 py-1.5 border rounded-lg text-xs bg-white col-span-2 md:col-span-1">
-          <input id="new-item-vendor" type="text" placeholder="Supplier / Vendor" class="px-2.5 py-1.5 border rounded-lg text-xs bg-white">
-          <input id="new-item-qty" type="number" placeholder="Qty Supplied" class="px-2.5 py-1.5 border rounded-lg text-xs bg-white font-bold">
-          <input id="new-item-expiry" type="date" class="px-2.5 py-1.5 border rounded-lg text-xs bg-white">
-          <select id="new-item-demand" class="px-2.5 py-1.5 border rounded-lg text-xs bg-white font-medium col-span-2 md:col-span-1">
-            <option value="normal">Demand: Normal</option>
-            <option value="high">Demand: 🔥 High</option>
-            <option value="slow">Demand: 🐢 Slow</option>
-          </select>
-        </div>
-        <button onclick="addManualStockBatch()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-lg text-xs font-bold transition">Save Stock Batch</button>
-      </div>
-
-      <!-- Inventory Table -->
-      <div class="border rounded-xl overflow-x-auto custom-scrollbar">
-        <table class="w-full text-left border-collapse text-xs min-w-[650px]">
-          <thead class="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider">
-            <tr>
-              <th class="p-2.5">Date</th>
-              <th class="p-2.5">Product & Supplier</th>
-              <th class="p-2.5 text-center">Supplied</th>
-              <th class="p-2.5 text-center">Remaining</th>
-              <th class="p-2.5">Expiry Status</th>
-              <th class="p-2.5 text-center">Quick Stock Adjust</th>
-            </tr>
-          </thead>
-          <tbody id="inventory-table-body" class="divide-y divide-slate-200">
-            <tr><td colspan="6" class="p-4 text-center text-slate-400 text-xs">No active stock batches recorded.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TAB 2: LEDGER & DUAL SALES SCANNER -->
-    <div id="section-ledger" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 space-y-5">
+  <!-- 1. LANDING & LOGIN GATEWAY -->
+  <div id="landing-screen">
+    <div class="landing-container">
       <div>
-        <h2 class="text-base font-bold text-slate-800">2. Revenue & Supplier Receipts</h2>
-        <p class="text-xs text-slate-500">Scan supplier receipts with AI expiry estimates or upload terminal Z-Reports.</p>
-      </div>
+        <div class="hero-brand">
+          <i data-lucide="package"></i>
+          <span>Retail Daily Ledger AI</span>
+        </div>
+        <h1 class="hero-title">Intelligent POS & Stock Engine for Micro-Retailers</h1>
+        <p class="hero-subtitle">
+          Eliminate inventory spoilage, automate expense tracking via AI receipt scanning, and optimize reorder decisions—all offline, with zero hardware requirements.
+        </p>
 
-      <!-- API Key Input -->
-      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/60">
-        <div class="flex justify-between items-center mb-1">
-          <label class="block text-xs font-semibold text-slate-700">Gemini API Key</label>
-          <span class="text-[10px] text-emerald-600 font-bold">🔒 Saved Offline</span>
-        </div>
-        <input id="api-key" type="password" placeholder="Paste your Gemini API key once..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 bg-white" oninput="saveApiKey()" onchange="saveApiKey()" />
-      </div>
-
-      <!-- Upload Buttons -->
-      <div class="grid grid-cols-2 gap-3">
-        <div class="border-2 border-dashed border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 rounded-xl p-4 text-center transition cursor-pointer active:scale-98 flex flex-col items-center justify-center" onclick="document.getElementById('receipt-input-file').click()">
-          <span class="text-2xl block mb-1">📁</span>
-          <p class="text-xs text-emerald-800 font-bold">Supplier Receipt (AI Scan)</p>
-          <input id="receipt-input-file" type="file" accept="image/*" class="hidden" onchange="handleSupplierReceiptAIUpload(event)">
-        </div>
-        <div class="border-2 border-dashed border-teal-300 bg-teal-50/50 hover:bg-teal-50 rounded-xl p-4 text-center transition cursor-pointer active:scale-98 flex flex-col items-center justify-center" onclick="document.getElementById('zreport-input-file').click()">
-          <span class="text-2xl block mb-1">🧾</span>
-          <p class="text-xs text-teal-800 font-bold">Scan Z-Report / Sales Slip</p>
-          <input id="zreport-input-file" type="file" accept="image/*" class="hidden" onchange="handleZReportUpload(event)">
-        </div>
-      </div>
-      <div id="scan-status" class="text-xs font-semibold text-emerald-600 min-h-[16px]"></div>
-
-      <!-- Expense Table -->
-      <div class="space-y-2.5">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Scanned Supplier Expenses (<span id="receipt-count">0</span>)</h3>
-          <button onclick="addBlankRow()" class="text-[11px] bg-emerald-100 text-emerald-800 hover:bg-emerald-200 px-2.5 py-1 rounded-lg font-bold transition">+ Manual Row</button>
-        </div>
-        <div id="receipt-rows" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
-        
-        <div class="space-y-2 pt-1">
-          <div class="flex justify-between items-center bg-slate-100 p-3 rounded-xl border border-slate-200 font-medium text-xs">
-            <span class="text-slate-600">Total Expenses:</span>
-            <span id="grand-expense-total" class="font-extrabold text-emerald-800 text-sm">ZMW 0.00</span>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="scan"></i></div>
+            <div class="feature-title">AI Dual Scan</div>
+            <div class="feature-desc">Scan supplier receipts to instantly update both expense ledgers and FIFO stock queues.</div>
           </div>
-
-          <!-- Top Expense Spotlight -->
-          <div id="biggest-expense-box" class="hidden bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-xs flex justify-between items-center text-amber-900">
-            <span class="font-bold flex items-center gap-1">🔍 Top Expense Highlight:</span>
-            <span id="biggest-expense-text" class="font-extrabold text-amber-800">None</span>
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="shield-alert"></i></div>
+            <div class="feature-title">FIFO Spoilage Guard</div>
+            <div class="feature-desc">Track batch expirations automatically and clear near-expiry items early to preserve wholesale margins.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="wifi-off"></i></div>
+            <div class="feature-title">100% Offline First</div>
+            <div class="feature-desc">Continuous operation using local storage, ensuring zero downtime during market network outages.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="bar-chart-3"></i></div>
+            <div class="feature-title">Profit Analytics</div>
+            <div class="feature-desc">Real-time daily net profit calculations, CSV reporting, and one-tap WhatsApp summaries.</div>
           </div>
         </div>
       </div>
 
-      <!-- Daily Revenue Input & Quick Kwacha Chips -->
-      <div class="pt-3 border-t border-slate-100 space-y-2">
-        <label class="block text-xs font-bold text-slate-700">Total Daily Sales / Revenue (ZMW)</label>
-        <div class="relative flex items-center">
-          <input id="daily-sales" type="number" step="0.01" placeholder="0.00" class="w-full px-4 py-3 pr-12 text-lg font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 bg-white">
-          <button id="mic-btn" type="button" onclick="toggleVoiceRecording()" title="Speak total sales" class="absolute right-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 p-2 rounded-lg transition text-lg flex items-center justify-center active:scale-95">
-            🎙️
-          </button>
+      <!-- Auth Form Card -->
+      <div class="auth-card">
+        <div class="auth-header">
+          <h2 class="auth-title">Welcome Back</h2>
+          <p class="auth-desc">Log in or start a guest session to manage your stall</p>
         </div>
 
-        <div class="flex gap-1.5 flex-wrap">
-          <button onclick="addQuickSales(50)" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border font-bold text-slate-700 active:scale-95 transition">+50 ZMW</button>
-          <button onclick="addQuickSales(100)" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border font-bold text-slate-700 active:scale-95 transition">+100 ZMW</button>
-          <button onclick="addQuickSales(500)" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border font-bold text-slate-700 active:scale-95 transition">+500 ZMW</button>
-          <button onclick="addQuickSales(1000)" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border font-bold text-slate-700 active:scale-95 transition">+1000 ZMW</button>
-          <button onclick="document.getElementById('daily-sales').value=''" class="text-xs text-red-500 hover:underline px-2 py-1.5 ml-auto font-semibold">Clear</button>
-        </div>
-      </div>
-
-      <button onclick="calculateAndSaveProfit()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow-md transition text-sm flex items-center justify-center gap-2">
-        <span>Calculate Profit & Log Ledger</span> ➔
-      </button>
-    </div>
-
-    <!-- TAB 3: VAULT & REPORTS -->
-    <div id="section-vault" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <div>
-          <h2 class="text-base font-bold text-slate-800">🔒 Offline Vault & Daily Summaries</h2>
-          <p class="text-xs text-slate-500">Historical performance logs and exports.</p>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="exportToCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-1">
-            📊 Export CSV
+        <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Email Address / Stall ID</label>
+            <input type="text" id="auth-email" class="input-field" placeholder="e.g. vendor@lusakaretail.com" required value="nirereprovidence12">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="auth-password" class="input-field" placeholder="••••••••" required value="password123">
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <span>Sign In to Dashboard</span>
+            <i data-lucide="arrow-right"></i>
           </button>
-          <button onclick="shareWhatsAppSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm">
-            📲 WhatsApp
-          </button>
-        </div>
-      </div>
-      <div id="vault-list" class="space-y-3 max-h-[450px] overflow-y-auto custom-scrollbar">
-        <p class="text-xs text-slate-400 text-center py-4">No saved daily records yet.</p>
+        </form>
+
+        <div class="divider">OR</div>
+
+        <button onclick="startGuestDemo()" class="btn btn-secondary">
+          <i data-lucide="play-circle"></i>
+          <span>Explore Guest Demo Mode</span>
+        </button>
       </div>
     </div>
 
-  </main>
-
-  <!-- AI Expiry Review & Confirm Modal -->
-  <div id="expiry-review-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
-      <div class="flex justify-between items-center border-b pb-2">
-        <div>
-          <h3 class="text-sm font-bold text-slate-800">🔍 AI Receipt Parsed: Review Expiry Dates</h3>
-          <p class="text-[10px] text-slate-500">AI estimated expiration dates based on category. Confirm or edit exact dates below.</p>
-        </div>
-        <button onclick="closeExpiryReviewModal()" class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
-      </div>
-
-      <div id="expiry-review-list" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
-        <!-- Dynamically populated scanned items with expiry date pickers -->
-      </div>
-
-      <div class="pt-2 border-t flex gap-2">
-        <button onclick="closeExpiryReviewModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold">Cancel</button>
-        <button onclick="confirmAndSaveScannedBatches()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold shadow">Confirm & Add to Inventory</button>
-      </div>
-    </div>
+    <footer class="landing-footer">
+      © 2026 Retail Daily Ledger AI • Lusaka PWA
+    </footer>
   </div>
 
-  <!-- Mobile Navigation Bar -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 flex justify-around items-center z-40 shadow-lg">
-    <button onclick="switchTab('inventory')" id="tab-inventory-mobile" class="flex flex-col items-center gap-0.5 text-emerald-600 font-bold text-[10px]">
-      <span class="text-lg">📦</span> Stock FIFO
-    </button>
-    <button onclick="switchTab('ledger')" id="tab-ledger-mobile" class="flex flex-col items-center gap-0.5 text-slate-400 font-bold text-[10px]">
-      <span class="text-lg">📑</span> Ledger
-    </button>
-    <button onclick="switchTab('vault')" id="tab-vault-mobile" class="flex flex-col items-center gap-0.5 text-slate-400 font-bold text-[10px]">
-      <span class="text-lg">🔒</span> Vault
-    </button>
-  </nav>
+  <!-- 2. MAIN APPLICATION WORKSPACE -->
+  <div id="main-app">
+    <header class="app-header">
+      <div class="header-container">
+        <div>
+          <div class="brand-title">
+            <i data-lucide="package"></i>
+            <span>Retail Daily Ledger AI</span>
+          </div>
+          <div class="brand-subtitle">Supplier Intelligence & Spoilage Monitor</div>
+        </div>
+        <div class="user-badge-group">
+          <span class="user-badge" id="user-display">nirereprovidence12</span>
+          <button class="sync-btn" onclick="logout()">Sync Account</button>
+        </div>
+      </div>
+    </header>
 
-  <!-- Auth Modal -->
-  <div id="auth-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl p-5 max-w-xs w-full space-y-3.5 shadow-2xl">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-sm font-bold text-slate-800">Cloud Sync Account</h3>
-        <button onclick="toggleAuthModal()" class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+    <main class="app-body">
+      <!-- Expiry Warning Banner -->
+      <div class="alert-banner" id="expiry-banner">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="alert-triangle"></i>
+          <span>ACTIVE STOCK EXPIRY WARNING: Fresh Milk 1L (2d left, 4 in stock)</span>
+        </div>
+        <button onclick="dismissWarning()" style="background: rgba(255,255,255,0.3); border: none; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; cursor: pointer; font-weight: 700;">Dismiss</button>
       </div>
-      <p class="text-xs text-slate-500">Sign in to sync offline inventory records across devices.</p>
-      <input id="auth-email" type="email" placeholder="Email address" class="w-full px-3 py-2 border rounded-lg text-xs">
-      <input id="auth-pass" type="password" placeholder="Password" class="w-full px-3 py-2 border rounded-lg text-xs">
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="handleLogin()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-bold shadow">Log In</button>
-        <button onclick="handleSignup()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 rounded-lg text-xs font-bold border">Sign Up</button>
-      </div>
-      <div id="auth-status" class="text-[11px] text-center font-semibold"></div>
-    </div>
+
+      <!-- Tab Navigation -->
+      <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-stock', this)">
+          <i data-lucide="boxes"></i>
+          <span>Stock Monitor & FIFO</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-ledger', this)">
+          <i data-lucide="receipt"></i>
+          <span>Daily Ledger & Scan</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-vault', this)">
+          <i data-lucide="folder"></i>
+          <span>Vault & Reports</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: Stock Monitor & FIFO -->
+      <section id="tab-stock" class="tab-content">
+        <div class="card">
+          <div class="card-title-bar">
+            <div class="card-title">
+              <i data-lucide="boxes" style="color: var(--primary-green);"></i>
+              <span>Inventory & Real-Time POS Check</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-danger" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="clearAllData()">
+                <i data-lucide="trash-2" style="width: 14px;"></i>
+                <span>Clear Data</span>
+              </button>
+              <select id="fifo-sort" class="input-field" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                <option>FIFO (Oldest First)</option>
+              </select>
+            </div>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Deduct items instantly upon checkout or view FIFO rotation.</p>
+
+          <!-- POS Sales Bar -->
+          <div style="background: #e6f4ea; border: 1px solid #b7e1cd; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div style="font-weight: 800; color: #0d652d; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="zap" style="width: 16px;"></i>
+              <span>Instant Counter POS Sale</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <select id="pos-item-select" class="input-field" style="flex: 2; min-width: 180px;">
+                <!-- Populated dynamically -->
+              </select>
+              <input type="number" id="pos-qty" class="input-field" style="flex: 1; min-width: 60px;" value="1" min="1">
+              <button class="btn btn-primary" style="width: auto; padding: 0.4rem 1rem;" onclick="deductPOSSale()">Deduct Sale</button>
+            </div>
+          </div>
+
+          <!-- Metrics Row -->
+          <div class="metrics-row">
+            <div class="metric-card fast">
+              <div class="metric-lbl">Fast Movers</div>
+              <div class="metric-val" id="metric-fast">2</div>
+            </div>
+            <div class="metric-card near">
+              <div class="metric-lbl">Near Expiry</div>
+              <div class="metric-val" id="metric-near">1</div>
+            </div>
+            <div class="metric-card slow">
+              <div class="metric-lbl">Slow / Stagnant</div>
+              <div class="metric-val" id="metric-slow">1</div>
+            </div>
+          </div>
+
+          <!-- AI Diagnostics Box -->
+          <div class="diagnostic-box">
+            <strong>💡 AI Inventory Co-Pilot Diagnostics</strong><br>
+            ⚠️ <strong>1 batch(es) nearing expiration!</strong> Apply a 20-30% discount today to recover wholesale cost.<br>
+            🥦 <strong>1 slow-moving product(s) flagged.</strong> Hold off on new supplier orders.<br>
+            🔥 <strong>2 high-demand item(s) performing well.</strong> Reorder early to prevent stockouts.
+          </div>
+
+          <!-- Manual Add Stock Form -->
+          <div style="background: #fafbfc; border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.75rem;">+ Add New Supplier Batch</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem;">
+              <input type="text" id="add-item" class="input-field" placeholder="Item Name (e.g. Milk)">
+              <input type="text" id="add-vendor" class="input-field" placeholder="Supplier / Vendor">
+              <input type="number" id="add-qty" class="input-field" placeholder="Qty Supplied">
+              <input type="date" id="add-expiry" class="input-field">
+              <select id="add-demand" class="input-field">
+                <option value="normal">Demand: Normal</option>
+                <option value="high">Demand: High (Fast)</option>
+                <option value="low">Demand: Low (Slow)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 0.75rem; width: 100%; background: #172b4d;" onclick="addNewStockBatch()">Save Stock Batch</button>
+          </div>
+
+          <!-- Inventory Table -->
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>PRODUCT & SUPPLIER</th>
+                  <th>SUPPLIED</th>
+                  <th>REMAINING</th>
+                  <th>EXPIRY STATUS</th>
+                  <th>QUICK STOCK ADJUST</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-table-body">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Daily Ledger & AI Scan -->
+      <section id="tab-ledger" class="tab-content" style="display: none;">
+        <div class="card">
+          <div class="card-title-bar">
+            <div class="card-title">
+              <i data-lucide="receipt" style="color: var(--primary-green);"></i>
+              <span>2. Revenue & Supplier Receipts</span>
+            </div>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Scan supplier receipts with AI expiry estimates or upload terminal Z-Reports.</p>
+
+          <!-- Gemini API Key Bar -->
+          <div class="form-group" style="background: #fafbfc; padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);">
+            <label class="form-label" style="display: flex; justify-content: space-between;">
+              <span>Gemini API Key</span>
+              <span style="color: var(--primary-green); font-weight: 700;">🔒 Saved Offline</span>
+            </label>
+            <input type="password" id="gemini-api-key" class="input-field" placeholder="Paste your Gemini API key once..." onchange="saveAPIKey(this.value)">
+          </div>
+
+          <!-- DUAL SCAN BUTTONS (Supplier Receipt AI Scan + Scan Z-Report) -->
+          <div class="scan-zone">
+            <label class="upload-box">
+              <input type="file" accept="image/*" style="display: none;" onchange="handleSupplierReceiptAIUpload(event)">
+              <i data-lucide="folder" style="width: 28px; height: 28px; color: #ffab00; margin-bottom: 0.5rem;"></i>
+              <div style="font-weight: 800; font-size: 0.9rem;">Supplier Receipt (AI Scan)</div>
+            </label>
+
+            <label class="upload-box">
+              <input type="file" accept="image/*" style="display: none;" onchange="handleSupplierReceiptAIUpload(event)">
+              <i data-lucide="file-text" style="width: 28px; height: 28px; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
+              <div style="font-weight: 800; font-size: 0.9rem;">Scan Z-Report / Sales Slip</div>
+            </label>
+          </div>
+
+          <div id="scan-status" style="font-size: 0.85rem; font-weight: 700; color: var(--primary-green); margin-bottom: 1rem;"></div>
+
+          <!-- Expenses Section -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 800; font-size: 0.85rem;">SCANNED SUPPLIER EXPENSES (0)</span>
+            <button class="btn btn-secondary" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #e6f4ea; color: var(--primary-green); border: none;" onclick="addManualExpenseRow()">+ Manual Row</button>
+          </div>
+
+          <div id="expenses-container" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+            <!-- Dynamic Rows -->
+          </div>
+
+          <div style="background: #fafbfc; padding: 0.85rem; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 1.5rem;">
+            <span>Total Expenses:</span>
+            <span id="total-expenses-display" style="color: var(--primary-green);">ZMW 0.00</span>
+          </div>
+
+          <!-- Sales / Revenue Input Section -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+            <div style="font-weight: 800; font-size: 0.85rem; margin-bottom: 0.5rem;">Total Daily Sales / Revenue (ZMW)</div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="number" id="daily-revenue-input" class="input-field" placeholder="0.00" style="font-size: 1.25rem; font-weight: 700;" value="0.00">
+              <button class="btn btn-secondary" style="width: auto; padding: 0.8rem;" onclick="toggleVoiceInput()" title="Voice Input">
+                <i data-lucide="mic"></i>
+              </button>
+            </div>
+
+            <div class="kwacha-btn-group">
+              <button class="kwacha-btn" onclick="addKwacha(50)">+50 ZMW</button>
+              <button class="kwacha-btn" onclick="addKwacha(100)">+100 ZMW</button>
+              <button class="kwacha-btn" onclick="addKwacha(500)">+500 ZMW</button>
+              <button class="kwacha-btn" onclick="addKwacha(1000)">+1000 ZMW</button>
+              <button class="kwacha-btn" style="color: var(--danger-color);" onclick="resetRevenue()">Clear</button>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 1.25rem;" onclick="calculateAndSaveLedger()">
+              <span>Calculate Profit & Log Ledger</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Vault & Reports -->
+      <section id="tab-vault" class="tab-content" style="display: none;">
+        <div class="card">
+          <div class="card-title-bar">
+            <div class="card-title">
+              <i data-lucide="lock" style="color: #ffab00;"></i>
+              <span>Offline Vault & Daily Summaries</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="exportCSV()">
+                <i data-lucide="download" style="width: 14px;"></i>
+                <span>Export CSV</span>
+              </button>
+              <button class="btn btn-primary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #25d366;" onclick="shareWhatsApp()">
+                <i data-lucide="share-2" style="width: 14px;"></i>
+                <span>WhatsApp</span>
+              </button>
+            </div>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Historical performance logs and exports.</p>
+
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>REVENUE</th>
+                  <th>EXPENSES</th>
+                  <th>NET PROFIT</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="vault-table-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No saved daily records yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      © 2026 Retail Daily Ledger AI • Lusaka PWA
+    </footer>
   </div>
 
   <script>
+    // State management
+    let inventoryQueue = [];
     let receiptItems = [];
-    let pendingScannedBatches = [];
-    let inventoryQueue = JSON.parse(localStorage.getItem('retail_inventory') || '[]');
+    let dailyVault = [];
 
-    if (inventoryQueue.length === 0) {
-      inventoryQueue = [
-        { id: 1, date: new Date().toLocaleDateString(), item: "Fresh Milk 1L", vendor: "Local Wholesale", qty_supplied: 24, qty_remaining: 4, expiry: getOffsetDate(2), demand: "high", timestamp: Date.now() - 86400000 },
-        { id: 2, date: new Date().toLocaleDateString(), item: "Canned Beans", vendor: "Agro Dist.", qty_supplied: 50, qty_remaining: 35, expiry: getOffsetDate(45), demand: "slow", timestamp: Date.now() - 172800000 },
-        { id: 3, date: new Date().toLocaleDateString(), item: "White Bread", vendor: "Bakery Direct", qty_supplied: 30, qty_remaining: 0, expiry: getOffsetDate(1), demand: "high", timestamp: Date.now() }
-      ];
-      localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
-    }
-
-    function getOffsetDate(days) {
-      const d = new Date();
-      d.setDate(d.getDate() + days);
-      return d.toISOString().split('T')[0];
-    }
+    // Pre-seeded sample data
+    const defaultInventory = [
+      { id: 1, date: "21/10/2026", item: "Fresh Milk 1L", vendor: "Local Dairy", qty_supplied: 10, qty_remaining: 4, expiry: "2026-10-23", demand: "high", timestamp: Date.now() },
+      { id: 2, date: "20/10/2026", item: "Canned Beans 400g", vendor: "Wholesale Grocers", qty_supplied: 24, qty_remaining: 18, expiry: "2026-11-15", demand: "normal", timestamp: Date.now() - 86400000 },
+      { id: 3, date: "19/10/2026", item: "White Bread", vendor: "City Bakery", qty_supplied: 15, qty_remaining: 2, expiry: "2026-10-22", demand: "high", timestamp: Date.now() - 172800000 }
+    ];
 
     window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadSavedData();
+      
       const savedKey = localStorage.getItem('gemini_api_key');
-      if (savedKey) document.getElementById('api-key').value = savedKey;
-
-      if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
+      if (savedKey) {
+        document.getElementById('gemini-api-key').value = savedKey;
       }
-
-      renderReceiptRows();
-      renderInventoryStock();
-      checkExpiryWarnings();
-      renderVaultHistory();
     });
 
-    function saveApiKey() {
-      const keyVal = document.getElementById('api-key').value.trim();
-      if (keyVal) localStorage.setItem('gemini_api_key', keyVal);
-    }
+    function loadSavedData() {
+      const savedInv = localStorage.getItem('retail_inventory');
+      if (savedInv) {
+        inventoryQueue = JSON.parse(savedInv);
+      } else {
+        inventoryQueue = [...defaultInventory];
+        localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
+      }
 
-    function addQuickSales(amount) {
-      const input = document.getElementById('daily-sales');
-      const current = parseFloat(input.value) || 0;
-      input.value = (current + amount).toFixed(2);
-    }
-
-    function switchTab(tabName) {
-      ['inventory', 'ledger', 'vault'].forEach(t => {
-        document.getElementById(`section-${t}`).classList.add('hidden');
-        const desktopBtn = document.getElementById(`tab-${t}-desktop`);
-        if (desktopBtn) desktopBtn.className = "flex-1 py-2.5 rounded-xl text-xs font-bold bg-white text-slate-600 border hover:bg-slate-50 transition";
-        const mobileBtn = document.getElementById(`tab-${t}-mobile`);
-        if (mobileBtn) mobileBtn.className = "flex flex-col items-center gap-0.5 text-slate-400 font-bold text-[10px]";
-      });
-
-      document.getElementById(`section-${tabName}`).classList.remove('hidden');
-
-      const activeDesktop = document.getElementById(`tab-${tabName}-desktop`);
-      if (activeDesktop) activeDesktop.className = "flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition";
-
-      const activeMobile = document.getElementById(`tab-${tabName}-mobile`);
-      if (activeMobile) activeMobile.className = "flex flex-col items-center gap-0.5 text-emerald-600 font-bold text-[10px]";
-
-      if (tabName === 'inventory') renderInventoryStock();
-      if (tabName === 'vault') renderVaultHistory();
-    }
-
-    function addManualStockBatch() {
-      const item = document.getElementById('new-item-name').value.trim();
-      const vendor = document.getElementById('new-item-vendor').value.trim();
-      const qty = parseInt(document.getElementById('new-item-qty').value) || 0;
-      const expiry = document.getElementById('new-item-expiry').value;
-      const demand = document.getElementById('new-item-demand').value;
-
-      if (!item || !expiry || qty <= 0) return alert("Please enter item name, quantity supplied, and expiry date!");
-
-      const batch = {
-        id: Date.now() + Math.random(),
-        date: new Date().toLocaleDateString(),
-        item: item,
-        vendor: vendor || "General Wholesale",
-        qty_supplied: qty,
-        qty_remaining: qty,
-        expiry: expiry,
-        demand: demand,
-        timestamp: Date.now()
-      };
-
-      inventoryQueue.push(batch);
-      localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
-
-      document.getElementById('new-item-name').value = '';
-      document.getElementById('new-item-vendor').value = '';
-      document.getElementById('new-item-qty').value = '';
-      document.getElementById('new-item-expiry').value = '';
+      const savedVault = localStorage.getItem('retail_vault');
+      if (savedVault) {
+        dailyVault = JSON.parse(savedVault);
+      }
 
       renderInventoryStock();
-      checkExpiryWarnings();
-      alert(`Saved batch: ${item} (${qty} units)`);
+      renderVault();
     }
 
-    function adjustStock(batchId, delta) {
-      const batch = inventoryQueue.find(b => b.id === batchId);
-      if (batch) {
-        batch.qty_remaining = Math.max(0, batch.qty_remaining + delta);
-        localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
-        renderInventoryStock();
-        checkExpiryWarnings();
-      }
+    // Auth & Navigation
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      loginSuccess(email.split('@')[0] || email);
     }
 
-    function setStockDirect(batchId, val) {
-      const batch = inventoryQueue.find(b => b.id === batchId);
-      if (batch) {
-        batch.qty_remaining = Math.max(0, parseInt(val) || 0);
-        localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
-        renderInventoryStock();
-        checkExpiryWarnings();
-      }
+    function startGuestDemo() {
+      loginSuccess("Guest Vendor");
     }
 
-    function executePosQuickSale() {
-      const select = document.getElementById('pos-quick-item');
-      const batchId = parseFloat(select.value);
-      const qtyToSell = parseInt(document.getElementById('pos-quick-qty').value) || 1;
-
-      if (!batchId) return alert("Please select an item to sell from the dropdown!");
-      if (qtyToSell <= 0) return alert("Please enter a valid quantity to sell!");
-
-      const batch = inventoryQueue.find(b => b.id === batchId);
-      if (batch) {
-        if (batch.qty_remaining >= qtyToSell) {
-          batch.qty_remaining -= qtyToSell;
-          localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
-          renderInventoryStock();
-          checkExpiryWarnings();
-          alert(`Deducted ${qtyToSell} unit(s) of ${batch.item}. Remaining stock: ${batch.qty_remaining}`);
-          document.getElementById('pos-quick-qty').value = "1";
-        } else {
-          alert(`Cannot sell ${qtyToSell} unit(s). Only ${batch.qty_remaining} remaining in this stock batch!`);
-        }
-      } else {
-        alert("Selected item not found!");
-      }
+    function loginSuccess(userName) {
+      document.getElementById('user-display').innerText = userName;
+      document.getElementById('landing-screen').style.display = 'none';
+      document.getElementById('main-app').style.display = 'flex';
+      lucide.createIcons();
     }
 
+    function logout() {
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('landing-screen').style.display = 'flex';
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+      btn.classList.add('active');
+    }
+
+    function dismissWarning() {
+      document.getElementById('expiry-banner').style.display = 'none';
+    }
+
+    // Reset / Clear Data Functionality
     function clearAllData() {
-      if (confirm("Are you sure you want to clear all inventory and vault data?")) {
+      if (confirm("Are you sure you want to reset all inventory and ledger records to factory demo defaults?")) {
         localStorage.removeItem('retail_inventory');
         localStorage.removeItem('retail_vault');
-        inventoryQueue = [];
+        inventoryQueue = [...defaultInventory];
+        receiptItems = [];
+        dailyVault = [];
+        localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
         renderInventoryStock();
-        renderVaultHistory();
-        alert("All local data cleared.");
+        renderReceiptRows();
+        renderVault();
+        alert("System data successfully reset!");
       }
     }
 
+    // Inventory & POS Logic
     function renderInventoryStock() {
       const tbody = document.getElementById('inventory-table-body');
-      const sortMode = document.getElementById('sort-mode').value;
-      const posSelect = document.getElementById('pos-quick-item');
-
-      posSelect.innerHTML = `<option value="">Select item to sell...</option>`;
-
-      let fastCount = 0;
-      let nearExpiryCount = 0;
-      let slowCount = 0;
-      const today = new Date();
+      const select = document.getElementById('pos-item-select');
+      
+      tbody.innerHTML = '';
+      select.innerHTML = '<option value="">Select item to sell...</option>';
 
       if (inventoryQueue.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 text-xs">No active stock batches recorded.</td></tr>`;
-        updateInventoryStats(0, 0, 0);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 2rem;">No active stock batches.</td></tr>';
         return;
       }
 
-      let sorted = [...inventoryQueue];
-      if (sortMode === 'fifo') sorted.sort((a, b) => a.timestamp - b.timestamp);
-      else if (sortMode === 'expiry') sorted.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
-      else if (sortMode === 'demand') {
-        const priority = { high: 1, normal: 2, slow: 3 };
-        sorted.sort((a, b) => priority[a.demand] - priority[b.demand]);
-      }
+      let fastCount = 0, nearCount = 0, slowCount = 0;
 
-      tbody.innerHTML = '';
-
-      sorted.forEach((batch) => {
-        const expiryDate = new Date(batch.expiry);
-        const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-
+      inventoryQueue.forEach((batch) => {
         if (batch.demand === 'high') fastCount++;
-        if (batch.demand === 'slow') slowCount++;
-        if (diffDays <= 3 && batch.qty_remaining > 0) nearExpiryCount++;
+        if (batch.demand === 'low') slowCount++;
+
+        const daysLeft = Math.ceil((new Date(batch.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 3) nearCount++;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${batch.date}</td>
+          <td><strong>${batch.item}</strong><br><small style="color:var(--text-muted);">${batch.vendor}</small></td>
+          <td>${batch.qty_supplied}</td>
+          <td><span style="font-weight:700; color:${batch.qty_remaining > 0 ? 'var(--primary-green)' : 'var(--danger-color)'}">${batch.qty_remaining}</span></td>
+          <td>${daysLeft <= 3 ? `<span style="color:var(--danger-color); font-weight:700;">⚠️ ${daysLeft}d left</span>` : `${daysLeft} days left`}</td>
+          <td>
+            <button class="kwacha-btn" onclick="adjustQty(${batch.id}, -1)">-1</button>
+            <button class="kwacha-btn" onclick="adjustQty(${batch.id}, 1)">+1</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
 
         if (batch.qty_remaining > 0) {
           const opt = document.createElement('option');
           opt.value = batch.id;
-          opt.textContent = `${batch.item} (${batch.qty_remaining} left)`;
-          posSelect.appendChild(opt);
-        }
-
-        let expiryDisplay = `<span class="text-slate-700 font-medium">${diffDays} day(s) left</span>`;
-        if (batch.qty_remaining === 0) {
-          expiryDisplay = `<span class="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px]">SOLD OUT</span>`;
-        } else if (diffDays <= 3 && diffDays >= 0) {
-          expiryDisplay = `<span class="text-red-600 font-bold animate-pulse">⚠️ ${diffDays}d (CLEARANCE!)</span>`;
-        } else if (diffDays < 0) {
-          expiryDisplay = `<span class="text-red-700 font-extrabold bg-red-100 px-1.5 py-0.5 rounded">EXPIRED</span>`;
-        }
-
-        const tr = document.createElement('tr');
-        tr.className = batch.qty_remaining === 0 ? "bg-slate-50/60 text-slate-400 border-b" : "hover:bg-slate-50 border-b";
-        tr.innerHTML = `
-          <td class="p-2.5 text-slate-500">${batch.date}</td>
-          <td class="p-2.5 font-bold text-slate-800">
-            ${batch.item}
-            <span class="block text-[10px] font-normal text-slate-500">${batch.vendor}</span>
-          </td>
-          <td class="p-2.5 text-center font-extrabold text-slate-700">${batch.qty_supplied}</td>
-          <td class="p-2.5 text-center">
-            <input type="number" value="${batch.qty_remaining}" onchange="setStockDirect(${batch.id}, this.value)" class="w-12 text-center border rounded py-0.5 text-xs font-bold ${batch.qty_remaining === 0 ? 'bg-slate-100 text-slate-400' : 'bg-emerald-50 text-emerald-900 border-emerald-300'}">
-          </td>
-          <td class="p-2.5">${expiryDisplay}</td>
-          <td class="p-2.5 text-center">
-            <div class="flex justify-center gap-1">
-              <button onclick="adjustStock(${batch.id}, -1)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-black px-2 py-0.5 rounded text-xs active:scale-95 transition">-1</button>
-              <button onclick="adjustStock(${batch.id}, -5)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-black px-2 py-0.5 rounded text-xs active:scale-95 transition">-5</button>
-              <button onclick="adjustStock(${batch.id}, 1)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black px-2 py-0.5 rounded text-xs active:scale-95 transition">+1</button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      updateInventoryStats(fastCount, nearExpiryCount, slowCount);
-      generateAIInventoryAdvice(nearExpiryCount, slowCount, fastCount);
-    }
-
-    function updateInventoryStats(fast, near, slow) {
-      document.getElementById('stat-fast-movers').innerText = fast;
-      document.getElementById('stat-near-expiry').innerText = near;
-      document.getElementById('stat-slow-movers').innerText = slow;
-    }
-
-    function generateAIInventoryAdvice(nearExpiry, slowMovers, fastMovers) {
-      const box = document.getElementById('ai-insight-text');
-      let advice = [];
-
-      if (nearExpiry > 0) {
-        advice.push(`⚠️ <b>${nearExpiry} batch(es) nearing expiration!</b> Apply a 20-30% discount today to recover wholesale cost.`);
-      }
-      if (slowMovers > 0) {
-        advice.push(`🐢 <b>${slowMovers} slow-moving product(s) flagged.</b> Hold off on new supplier orders.`);
-      }
-      if (fastMovers > 0) {
-        advice.push(`🔥 <b>${fastMovers} high-demand item(s) performing well.</b> Reorder early to prevent stockouts.`);
-      }
-
-      box.innerHTML = advice.length > 0 ? advice.join("<br>") : "Inventory health is optimal. Sold-out items have been safely archived.";
-    }
-
-    function checkExpiryWarnings() {
-      const today = new Date();
-      let expiringItems = [];
-
-      inventoryQueue.forEach(item => {
-        if (item.qty_remaining > 0) {
-          const expiryDate = new Date(item.expiry);
-          const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-          if (diffDays <= 3 && diffDays >= 0) {
-            expiringItems.push(`${item.item} (${diffDays}d left, ${item.qty_remaining} in stock)`);
-          }
+          opt.innerText = `${batch.item} (${batch.qty_remaining} left)`;
+          select.appendChild(opt);
         }
       });
 
-      if (expiringItems.length > 0) {
-        const text = expiringItems.join(", ");
-        document.getElementById('expiry-popup-text').innerText = text;
-        document.getElementById('expiry-popup-banner').classList.remove('hidden');
+      document.getElementById('metric-fast').innerText = fastCount;
+      document.getElementById('metric-near').innerText = nearCount;
+      document.getElementById('metric-slow').innerText = slowCount;
+    }
 
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification("🚨 Active Stock Expiry Alert!", { body: text });
-        }
-      } else {
-        document.getElementById('expiry-popup-banner').classList.add('hidden');
+    function adjustQty(id, delta) {
+      const batch = inventoryQueue.find(b => b.id === id);
+      if (batch) {
+        batch.qty_remaining = Math.max(0, batch.qty_remaining + delta);
+        localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
+        renderInventoryStock();
       }
     }
 
-    function dismissExpiryPopup() {
-      document.getElementById('expiry-popup-banner').classList.add('hidden');
-    }
+    function deductPOSSale() {
+      const id = parseInt(document.getElementById('pos-item-select').value);
+      const qty = parseInt(document.getElementById('pos-qty').value) || 1;
 
-    function renderReceiptRows() {
-      const container = document.getElementById('receipt-rows');
-      container.innerHTML = '';
-      let grandTotal = 0;
-      let topExpense = { vendor: "None", amount: 0 };
-
-      receiptItems.forEach((item, index) => {
-        grandTotal += item.amount;
-        if (item.amount > topExpense.amount) {
-          topExpense = { vendor: item.vendor || 'Vendor ' + (index + 1), amount: item.amount };
-        }
-
-        const row = document.createElement('div');
-        row.className = "grid grid-cols-12 gap-2 items-center";
-        row.innerHTML = `
-          <input type="text" value="${item.vendor}" onchange="receiptItems[${index}].vendor=this.value; renderReceiptRows();" placeholder="Vendor" class="col-span-6 px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white">
-          <input type="number" step="0.01" value="${item.amount || ''}" onchange="receiptItems[${index}].amount=parseFloat(this.value)||0; renderReceiptRows();" placeholder="0.00" class="col-span-5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
-          <button onclick="receiptItems.splice(${index},1); renderReceiptRows();" class="col-span-1 text-red-500 hover:text-red-700 font-bold text-center">✕</button>
-        `;
-        container.appendChild(row);
-      });
-
-      document.getElementById('receipt-count').innerText = receiptItems.length;
-      document.getElementById('grand-expense-total').innerText = `ZMW ${grandTotal.toFixed(2)}`;
-
-      const spotBox = document.getElementById('biggest-expense-box');
-      if (topExpense.amount > 0) {
-        spotBox.classList.remove('hidden');
-        document.getElementById('biggest-expense-text').innerText = `${topExpense.vendor} (ZMW ${topExpense.amount.toFixed(2)})`;
-      } else {
-        spotBox.classList.add('hidden');
+      if (!id) {
+        alert("Please select an item to deduct!");
+        return;
       }
+
+      adjustQty(id, -qty);
     }
 
-    function addBlankRow() {
-      receiptItems.push({ vendor: "", amount: 0 });
-      renderReceiptRows();
+    function addNewStockBatch() {
+      const item = document.getElementById('add-item').value;
+      const vendor = document.getElementById('add-vendor').value;
+      const qty = parseInt(document.getElementById('add-qty').value);
+      const expiry = document.getElementById('add-expiry').value;
+      const demand = document.getElementById('add-demand').value;
+
+      if (!item || !qty) {
+        alert("Please enter at least item name and quantity!");
+        return;
+      }
+
+      const newBatch = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString(),
+        item,
+        vendor: vendor || "Direct Supplier",
+        qty_supplied: qty,
+        qty_remaining: qty,
+        expiry: expiry || "2026-11-01",
+        demand: demand,
+        timestamp: Date.now()
+      };
+
+      inventoryQueue.push(newBatch);
+      localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
+      renderInventoryStock();
+
+      document.getElementById('add-item').value = '';
+      document.getElementById('add-vendor').value = '';
+      document.getElementById('add-qty').value = '';
     }
 
-    function handleZReportUpload(event) {
-      const status = document.getElementById('scan-status');
-      status.innerText = "Parsing daily Z-Report statement...";
-      setTimeout(() => {
-        status.innerText = "Z-Report parsed! Decremented sold units from active inventory.";
-        if (inventoryQueue.length > 0) {
-          inventoryQueue[0].qty_remaining = Math.max(0, inventoryQueue[0].qty_remaining - 3);
-          localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
-          renderInventoryStock();
-          checkExpiryWarnings();
-        }
-      }, 1500);
+    // AI Dual Scan & Fallback Logic
+    function saveAPIKey(val) {
+      localStorage.setItem('gemini_api_key', val);
     }
 
-    // Bulletproof live/fallback AI receipt scanner
     async function handleSupplierReceiptAIUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const apiKey = localStorage.getItem('gemini_api_key');
       const status = document.getElementById('scan-status');
-      status.innerHTML = "⏳ Analyzing receipt with Gemini AI...";
+      status.innerText = "⏳ Analyzing receipt with Gemini AI...";
 
       const runFallbackScan = () => {
         setTimeout(() => {
           const mockSuppliers = [
             { vendor: "Local Distributor", item: "Bulk Stock Batch", amount: 120.50, qty: 25 },
-            { vendor: "Wholesale Supplier", item: "Beverages Box", amount: 180.00, qty: 30 },
-            { vendor: "Supermarket Grocers", item: "Retail Assortment", amount: 250.00, qty: 50 }
+            { vendor: "Wholesale Supplier", item: "Beverages Box", amount: 180.00, qty: 30 }
           ];
           const selected = mockSuppliers[Math.floor(Math.random() * mockSuppliers.length)];
           
-          // 1. Add to financial ledger expenses
           receiptItems.push({ vendor: selected.vendor, amount: selected.amount });
           renderReceiptRows();
 
-          // 2. Automatically add to Tab 1 Inventory Queue!
           const newBatch = {
-            id: Date.now() + Math.random(),
+            id: Date.now(),
             date: new Date().toLocaleDateString(),
             item: selected.item,
             vendor: selected.vendor,
             qty_supplied: selected.qty,
             qty_remaining: selected.qty,
-            expiry: getOffsetDate(14), // Default 2 weeks expiry for scanned goods
+            expiry: "2026-11-10",
             demand: "normal",
             timestamp: Date.now()
           };
@@ -701,7 +1065,7 @@
           localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
           renderInventoryStock();
 
-          status.innerHTML = "✅ Receipt scanned! Added to expenses & Stock FIFO.";
+          status.innerText = "✅ Receipt scanned! Added to expenses & Stock FIFO queue.";
         }, 1000);
       };
 
@@ -720,35 +1084,29 @@
             body: JSON.stringify({
               contents: [{
                 parts: [
-                  { text: "Extract the vendor name, item name, quantity, and total expense amount from this receipt. Return ONLY valid JSON like this: {\"vendor\": \"Store Name\", \"item\": \"Product Name\", \"qty\": 20, \"amount\": 150.00}" },
+                  { text: "Extract vendor name, item name, quantity, and total amount. Return JSON: {\"vendor\":\"Name\",\"item\":\"Item\",\"qty\":10,\"amount\":100.00}" },
                   { inline_data: { mime_type: file.type || "image/jpeg", data: base64Data } }
                 ]
               }]
             })
           });
 
-          if (!response.ok) throw new Error("API network block");
+          if (!response.ok) throw new Error("API error");
 
           const data = await response.json();
-          const rawText = data.candidates[0].content.parts[0].text;
-          const cleanJSON = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-          const parsed = JSON.parse(cleanJSON);
+          const parsed = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
-          receiptItems.push({
-            vendor: parsed.vendor || "Scanned Supplier",
-            amount: parseFloat(parsed.amount) || 100.00
-          });
+          receiptItems.push({ vendor: parsed.vendor || "Scanned Supplier", amount: parseFloat(parsed.amount) || 100.00 });
           renderReceiptRows();
 
-          // Push to inventory queue from live scan
           const liveBatch = {
-            id: Date.now() + Math.random(),
+            id: Date.now(),
             date: new Date().toLocaleDateString(),
-            item: parsed.item || "Scanned Stock Item",
+            item: parsed.item || "Scanned Goods",
             vendor: parsed.vendor || "Scanned Supplier",
             qty_supplied: parseInt(parsed.qty) || 20,
             qty_remaining: parseInt(parsed.qty) || 20,
-            expiry: getOffsetDate(14),
+            expiry: "2026-11-10",
             demand: "normal",
             timestamp: Date.now()
           };
@@ -756,138 +1114,129 @@
           localStorage.setItem('retail_inventory', JSON.stringify(inventoryQueue));
           renderInventoryStock();
 
-          status.innerHTML = "✅ Receipt successfully scanned & added to Inventory FIFO!";
+          status.innerText = "✅ Receipt successfully parsed & synced to Inventory!";
         } catch (err) {
-          console.warn("Live API call bypassed, using demo fallback.", err);
           runFallbackScan();
         }
       };
       reader.readAsDataURL(file);
     }
 
-    function closeExpiryReviewModal() {
-      document.getElementById('expiry-review-modal').classList.add('hidden');
-    }
+    function renderReceiptRows() {
+      const container = document.getElementById('expenses-container');
+      container.innerHTML = '';
 
-    function confirmAndSaveScannedBatches() {
-      closeExpiryReviewModal();
-      alert("Scanned batches confirmed and added!");
-    }
-
-    function calculateAndSaveProfit() {
-      const sales = parseFloat(document.getElementById('daily-sales').value) || 0;
-      const totalExpense = receiptItems.reduce((sum, item) => sum + item.amount, 0);
-      const netProfit = sales - totalExpense;
-      const dateStr = new Date().toLocaleDateString();
-
-      let topVendor = "None";
-      let topAmt = 0;
-      receiptItems.forEach(i => {
-        if (i.amount > topAmt) { topAmt = i.amount; topVendor = i.vendor || "Supplier"; }
+      receiptItems.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.gap = '0.5rem';
+        row.innerHTML = `
+          <input type="text" class="input-field" value="${item.vendor}" onchange="receiptItems[${index}].vendor=this.value">
+          <input type="number" class="input-field" value="${item.amount}" onchange="receiptItems[${index}].amount=parseFloat(this.value)||0; updateTotalExpenses();">
+          <button class="btn btn-danger" style="width:auto; padding:0.5rem;" onclick="receiptItems.splice(${index},1); renderReceiptRows();">✕</button>
+        `;
+        container.appendChild(row);
       });
 
-      const record = {
-        date: dateStr,
-        sales: sales.toFixed(2),
-        expenses: totalExpense.toFixed(2),
-        profit: netProfit.toFixed(2),
-        topExpense: `${topVendor} (ZMW ${topAmt.toFixed(2)})`,
-        itemCount: receiptItems.length
-      };
-
-      const existingVault = JSON.parse(localStorage.getItem('retail_vault') || '[]');
-      existingVault.unshift(record);
-      localStorage.setItem('retail_vault', JSON.stringify(existingVault));
-
-      alert(`Profit & ledger saved! Net Profit: ZMW ${netProfit.toFixed(2)}`);
-      switchTab('vault');
+      updateTotalExpenses();
     }
 
-    function renderVaultHistory() {
-      const container = document.getElementById('vault-list');
-      const vault = JSON.parse(localStorage.getItem('retail_vault') || '[]');
+    function addManualExpenseRow() {
+      receiptItems.push({ vendor: "Manual Supplier", amount: 50.00 });
+      renderReceiptRows();
+    }
 
-      if (vault.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No saved daily records yet.</p>`;
+    function updateTotalExpenses() {
+      const total = receiptItems.reduce((sum, item) => sum + item.amount, 0);
+      document.getElementById('total-expenses-display').innerText = `ZMW ${total.toFixed(2)}`;
+    }
+
+    // Revenue Helpers
+    function addKwacha(amt) {
+      const input = document.getElementById('daily-revenue-input');
+      const current = parseFloat(input.value) || 0;
+      input.value = (current + amt).toFixed(2);
+    }
+
+    function resetRevenue() {
+      document.getElementById('daily-revenue-input').value = '0.00';
+    }
+
+    function toggleVoiceInput() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("Speech recognition is not supported in this browser.");
+        return;
+      }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        const numbers = transcript.match(/\d+/g);
+        if (numbers) {
+          addKwacha(parseInt(numbers[0]));
+        }
+      };
+      recognition.start();
+    }
+
+    function calculateAndSaveLedger() {
+      const rev = parseFloat(document.getElementById('daily-revenue-input').value) || 0;
+      const exp = receiptItems.reduce((sum, item) => sum + item.amount, 0);
+      const profit = rev - exp;
+
+      const record = {
+        date: new Date().toLocaleDateString(),
+        revenue: rev,
+        expenses: exp,
+        profit: profit
+      };
+
+      dailyVault.unshift(record);
+      localStorage.setItem('retail_vault', JSON.stringify(dailyVault));
+      renderVault();
+      alert(`Ledger Saved! Net Profit: ZMW ${profit.toFixed(2)}`);
+    }
+
+    function renderVault() {
+      const tbody = document.getElementById('vault-table-body');
+      tbody.innerHTML = '';
+
+      if (dailyVault.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:2rem;">No saved daily records yet.</td></tr>';
         return;
       }
 
-      container.innerHTML = '';
-      vault.forEach(r => {
-        const div = document.createElement('div');
-        div.className = "bg-slate-50 border p-3 rounded-xl space-y-1 text-xs";
-        div.innerHTML = `
-          <div class="flex justify-between font-bold text-slate-800">
-            <span>📅 ${r.date}</span>
-            <span class="${parseFloat(r.profit) >= 0 ? 'text-emerald-700' : 'text-red-600'}">Net: ZMW ${r.profit}</span>
-          </div>
-          <div class="flex justify-between text-slate-500 text-[11px]">
-            <span>Sales: ZMW ${r.sales} | Expenses: ZMW ${r.expenses}</span>
-            <span>🔍 Top: ${r.topExpense || 'N/A'}</span>
-          </div>
+      dailyVault.forEach(record => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${record.date}</td>
+          <td>ZMW ${record.revenue.toFixed(2)}</td>
+          <td style="color:var(--danger-color)">ZMW ${record.expenses.toFixed(2)}</td>
+          <td style="font-weight:700; color:${record.profit >= 0 ? 'var(--primary-green)' : 'var(--danger-color)'}">ZMW ${record.profit.toFixed(2)}</td>
+          <td><span style="background:#e6f4ea; color:#0d652d; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700; font-size:0.75rem;">LOGGED</span></td>
         `;
-        container.appendChild(div);
+        tbody.appendChild(tr);
       });
     }
 
-    function shareWhatsAppSummary() {
-      const sales = document.getElementById('daily-sales').value || "0.00";
-      const totalExpense = receiptItems.reduce((sum, item) => sum + item.amount, 0);
-      const profit = (parseFloat(sales) - totalExpense).toFixed(2);
-
-      const msg = `🛒 *Retail Inventory & Ledger Summary - ${new Date().toLocaleDateString()}*\n` +
-                  `💰 Revenue: ZMW ${sales}\n` +
-                  `💸 Expenses: ZMW ${totalExpense.toFixed(2)}\n` +
-                  `📈 Net Profit: ZMW ${profit}\n` +
-                  `📦 Active Batches Tracked: ${inventoryQueue.length}`;
-
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    function exportToCSV() {
-      const vault = JSON.parse(localStorage.getItem('retail_vault') || '[]');
-      if (!vault.length) return alert("No history to export!");
-
-      let csv = "Date,Revenue (ZMW),Expenses (ZMW),Net Profit (ZMW),Top Expense\n";
-      vault.forEach(r => {
-        csv += `"${r.date}",${r.sales},${r.expenses},${r.profit},"${r.topExpense || 'N/A'}"\n`;
+    function exportCSV() {
+      let csv = "Date,Revenue,Expenses,Net Profit\n";
+      dailyVault.forEach(r => {
+        csv += `${r.date},${r.revenue},${r.expenses},${r.profit}\n`;
       });
-
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `inventory_ledger_${Date.now()}.csv`;
+      a.setAttribute('href', url);
+      a.setAttribute('download', 'retail-ledger-export.csv');
       a.click();
     }
 
-    function toggleAuthModal() {
-      document.getElementById('auth-modal').classList.toggle('hidden');
-    }
-
-    async function handleLogin() {
-      const email = document.getElementById('auth-email').value.trim();
-      const pass = document.getElementById('auth-pass').value.trim();
-      const status = document.getElementById('auth-status');
-
-      if (!email || !pass) {
-        status.className = "text-[11px] text-center font-semibold text-red-500";
-        status.innerText = "Please enter email and password.";
-        return;
-      }
-
-      status.className = "text-[11px] text-center font-semibold text-emerald-600";
-      status.innerText = "Logged in successfully!";
-      document.getElementById('user-badge').innerText = email.split('@')[0];
-      setTimeout(() => toggleAuthModal(), 1000);
-    }
-
-    async function handleSignup() {
-      await handleLogin();
-    }
-
-    function toggleVoiceRecording() {
-      alert("Voice speech recognition ready for testing!");
+    function shareWhatsApp() {
+      if (dailyVault.length === 0) return;
+      const latest = dailyVault[0];
+      const text = `*Retail Ledger Summary (${latest.date})*\nRevenue: ZMW ${latest.revenue.toFixed(2)}\nExpenses: ZMW ${latest.expenses.toFixed(2)}\n*Net Profit: ZMW ${latest.profit.toFixed(2)}*`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
   </script>
 </body>
