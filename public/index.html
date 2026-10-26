@@ -64,6 +64,13 @@
     .input-with-mic { display: flex; gap: 0.4rem; align-items: center; }
     .mic-btn { background: rgba(16, 185, 129, 0.15); color: var(--primary-emerald); border: 1px solid var(--border-dark); padding: 0.75rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
     .mic-btn:hover { background: rgba(16, 185, 129, 0.3); }
+    .mic-btn.recording { background: var(--red-danger); color: white; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
 
     .btn { width: 100%; padding: 0.85rem 1.5rem; border-radius: 8px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease; }
     .btn-primary { background: var(--primary-emerald); color: white; }
@@ -188,7 +195,7 @@
             <label class="form-label">Email Address / Stall ID</label>
             <div class="input-with-mic">
               <input type="email" id="auth-email" class="input-field" autocomplete="email" placeholder="e.g. vendor@lusakaretail.com" required>
-              <button type="button" class="mic-btn" onclick="promptVoiceInput('auth-email')" title="Dictate Email"><i data-lucide="mic" style="width:18px;"></i></button>
+              <button type="button" class="mic-btn" id="mic-auth-email" onclick="toggleRealVoiceRecord('auth-email')" title="Record Voice"><i data-lucide="mic" style="width:18px;"></i></button>
             </div>
           </div>
           <div class="form-group">
@@ -315,17 +322,17 @@
             </div>
           </div>
 
-          <!-- Manual Add Stock Form (Demand Bar Removed!) -->
+          <!-- Manual Add Stock Form -->
           <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
             <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.75rem;">+ Add New Supplier Batch</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;">
               <div class="input-with-mic">
                 <input type="text" id="add-item" class="input-field" placeholder="Item Name">
-                <button type="button" class="mic-btn" onclick="promptVoiceInput('add-item')"><i data-lucide="mic" style="width:14px;"></i></button>
+                <button type="button" class="mic-btn" id="mic-add-item" onclick="toggleRealVoiceRecord('add-item')"><i data-lucide="mic" style="width:14px;"></i></button>
               </div>
               <div class="input-with-mic">
                 <input type="text" id="add-vendor" class="input-field" placeholder="Supplier / Vendor">
-                <button type="button" class="mic-btn" onclick="promptVoiceInput('add-vendor')"><i data-lucide="mic" style="width:14px;"></i></button>
+                <button type="button" class="mic-btn" id="mic-add-vendor" onclick="toggleRealVoiceRecord('add-vendor')"><i data-lucide="mic" style="width:14px;"></i></button>
               </div>
               <input type="number" id="add-qty" class="input-field" placeholder="Qty Supplied" min="1">
               <input type="number" id="add-price" class="input-field" placeholder="Unit Price (ZMW)" min="0" step="0.50">
@@ -403,7 +410,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
               <div class="input-with-mic" style="width: 100%;">
                 <input type="number" id="daily-revenue-input" class="input-field" placeholder="0.00" style="font-size: 1.25rem; font-weight: 700;" value="0.00">
-                <button type="button" class="mic-btn" onclick="promptVoiceInput('daily-revenue-input', true)" title="Speak Sales Amount"><i data-lucide="mic" style="width:18px;"></i></button>
+                <button type="button" class="mic-btn" id="mic-daily-revenue-input" onclick="toggleRealVoiceRecord('daily-revenue-input', true)" title="Speak Sales Amount"><i data-lucide="mic" style="width:18px;"></i></button>
               </div>
             </div>
 
@@ -472,6 +479,9 @@
 
   <script>
     let currentAuthMode = 'signin';
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let activeRecordingInput = null;
 
     window.addEventListener('DOMContentLoaded', () => {
       const savedUser = JSON.parse(localStorage.getItem('retail_user_session'));
@@ -631,17 +641,68 @@
       }
     }
 
-    // BULLETPROOF VOICE PROMPT & INPUT FALLBACK
-    function promptVoiceInput(inputId, isNumber = false) {
-      const promptMsg = isNumber ? "Speak or type numeric value (e.g. 1500):" : "Speak or type text:";
-      const val = prompt(promptMsg);
-      if (val !== null && val.trim() !== "") {
-        const target = document.getElementById(inputId);
-        if (target) {
-          target.value = isNumber ? parseFloat(val.replace(/[^0-9.]/g, '') || 0).toFixed(2) : val.trim();
+    // REAL MICROPHONE VOICE RECORDING (Sends audio blob to Gemini AI Backend)
+    async function toggleRealVoiceRecord(inputId, isNumber = false) {
+      const micBtn = event.currentTarget;
+      const statusEl = document.getElementById('scan-status');
+
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        if (micBtn) micBtn.classList.remove('recording');
+        if (statusEl) statusEl.innerText = "⏳ Processing voice recording with AI...";
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        activeRecordingInput = inputId;
+
+        mediaRecorder.ondataavailable = event => {
+          audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "voice_note.webm");
+
+          try {
+            const res = await fetch("https://retail-daily-ledger-ai.onrender.com/voice-parse", {
+              method: "POST",
+              body: formData
+            });
+            const data = await res.json();
+
+            if (data && data.extractedValue) {
+              const target = document.getElementById(inputId);
+              if (target) {
+                target.value = isNumber ? parseFloat(data.extractedValue.replace(/[^0-9.]/g, '') || 0).toFixed(2) : data.extractedValue;
+              }
+              if (statusEl) statusEl.innerText = `✅ Voice Parsed: "${data.transcript}" -> ${data.extractedValue}`;
+            } else {
+              throw new Error("Could not parse audio.");
+            }
+          } catch (err) {
+            console.error("Voice parse error:", err);
+            const manualVal = prompt("⚠️ Voice server busy. Type value manually:");
+            if (manualVal !== null) {
+              document.getElementById(inputId).value = isNumber ? parseFloat(manualVal || 0).toFixed(2) : manualVal;
+            }
+            if (statusEl) statusEl.innerText = "ℹ️ Switched to manual entry.";
+          }
+        };
+
+        mediaRecorder.start();
+        if (micBtn) micBtn.classList.add('recording');
+        if (statusEl) statusEl.innerText = "🔴 Listening... Speak now (tap mic again to stop).";
+      } catch (err) {
+        console.error("Mic error:", err);
+        const manualVal = prompt("⚠️ Microphone access denied or unavailable. Type value manually:");
+        if (manualVal !== null) {
+          document.getElementById(inputId).value = isNumber ? parseFloat(manualVal || 0).toFixed(2) : manualVal;
         }
-        const statusEl = document.getElementById('scan-status');
-        if (statusEl) statusEl.innerText = `✅ Voice/Dictation Captured: "${val}"`;
       }
     }
 
@@ -757,7 +818,6 @@
         const isNearOrExpired = daysLeft <= 3;
         const isOutOfStock = batch.qty_remaining <= 0;
 
-        // AUTOMATED AI ACTION RECOMMENDATIONS
         let aiActionHtml = '';
         if (isOutOfStock) {
           aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.2); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🛒 Reorder Immediately</span>`;
