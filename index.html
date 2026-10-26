@@ -64,13 +64,6 @@
     .input-with-mic { display: flex; gap: 0.4rem; align-items: center; }
     .mic-btn { background: rgba(16, 185, 129, 0.15); color: var(--primary-emerald); border: 1px solid var(--border-dark); padding: 0.75rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
     .mic-btn:hover { background: rgba(16, 185, 129, 0.3); }
-    .mic-btn.listening { background: var(--red-danger); color: white; animation: pulse 1s infinite; }
-
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
 
     .btn { width: 100%; padding: 0.85rem 1.5rem; border-radius: 8px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease; }
     .btn-primary { background: var(--primary-emerald); color: white; }
@@ -195,7 +188,7 @@
             <label class="form-label">Email Address / Stall ID</label>
             <div class="input-with-mic">
               <input type="email" id="auth-email" class="input-field" autocomplete="email" placeholder="e.g. vendor@lusakaretail.com" required>
-              <button type="button" class="mic-btn" id="mic-auth-email" onclick="startVoiceInput('auth-email')" title="Voice Type Email"><i data-lucide="mic" style="width:18px;"></i></button>
+              <button type="button" class="mic-btn" onclick="promptVoiceInput('auth-email')" title="Dictate Email"><i data-lucide="mic" style="width:18px;"></i></button>
             </div>
           </div>
           <div class="form-group">
@@ -254,7 +247,7 @@
       <nav class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('tab-stock', this)">
           <i data-lucide="boxes"></i>
-          <span>Stock Monitor & FIFO</span>
+          <span>Stock Monitor & AI Action Hub</span>
         </button>
         <button class="tab-btn" onclick="switchTab('tab-ledger', this)">
           <i data-lucide="receipt"></i>
@@ -266,13 +259,13 @@
         </button>
       </nav>
 
-      <!-- TAB 1: Stock Monitor & FIFO -->
+      <!-- TAB 1: Stock Monitor & AI Action Hub -->
       <section id="tab-stock" class="tab-content">
         <div class="card">
           <div class="card-title-bar">
             <div class="card-title">
               <i data-lucide="boxes" style="color: var(--primary-emerald);"></i>
-              <span>Inventory & Real-Time POS Check</span>
+              <span>Inventory & Automated AI Action Recommendations</span>
             </div>
             <div style="display: flex; gap: 0.5rem;">
               <button class="btn btn-danger" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="clearAllData()">
@@ -282,9 +275,9 @@
             </div>
           </div>
 
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Deduct items instantly upon checkout or view FIFO rotation with live AI velocity scores.</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Deduct items instantly upon checkout. AI automatically calculates velocity and suggests actions (markdowns, reorders, or clearance).</p>
 
-          <!-- POS Sales Bar with Price Bar Visible -->
+          <!-- POS Sales Bar -->
           <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
             <div style="font-weight: 800; color: var(--primary-emerald); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
               <i data-lucide="zap" style="width: 16px;"></i>
@@ -322,26 +315,21 @@
             </div>
           </div>
 
-          <!-- Manual Add Stock Form -->
+          <!-- Manual Add Stock Form (Demand Bar Removed!) -->
           <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
             <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.75rem;">+ Add New Supplier Batch</div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;">
               <div class="input-with-mic">
                 <input type="text" id="add-item" class="input-field" placeholder="Item Name">
-                <button type="button" class="mic-btn" id="mic-add-item" onclick="startVoiceInput('add-item')"><i data-lucide="mic" style="width:14px;"></i></button>
+                <button type="button" class="mic-btn" onclick="promptVoiceInput('add-item')"><i data-lucide="mic" style="width:14px;"></i></button>
               </div>
               <div class="input-with-mic">
                 <input type="text" id="add-vendor" class="input-field" placeholder="Supplier / Vendor">
-                <button type="button" class="mic-btn" id="mic-add-vendor" onclick="startVoiceInput('add-vendor')"><i data-lucide="mic" style="width:14px;"></i></button>
+                <button type="button" class="mic-btn" onclick="promptVoiceInput('add-vendor')"><i data-lucide="mic" style="width:14px;"></i></button>
               </div>
               <input type="number" id="add-qty" class="input-field" placeholder="Qty Supplied" min="1">
               <input type="number" id="add-price" class="input-field" placeholder="Unit Price (ZMW)" min="0" step="0.50">
               <input type="date" id="add-expiry" class="input-field">
-              <select id="add-demand" class="input-field">
-                <option value="normal">Demand: Normal</option>
-                <option value="high">Demand: High (Fast)</option>
-                <option value="low">Demand: Low (Slow)</option>
-              </select>
             </div>
             <button class="btn btn-primary" style="margin-top: 0.75rem; width: 100%;" onclick="addNewStockBatch()">Save Stock Batch</button>
           </div>
@@ -356,8 +344,8 @@
                   <th>SUPPLIED</th>
                   <th>REMAINING</th>
                   <th>UNIT PRICE</th>
-                  <th>AI DEMAND & EXPIRY</th>
-                  <th>QUICK STOCK ADJUST</th>
+                  <th>AI ACTION RECOMMENDATION</th>
+                  <th>QUICK ADJUST</th>
                 </tr>
               </thead>
               <tbody id="inventory-table-body">
@@ -377,7 +365,7 @@
               <span>2. Revenue & Supplier Receipts</span>
             </div>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Scan supplier receipts or Z-reports via backend AI. Invalid documents are automatically rejected.</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Scan supplier receipts or Z-reports via backend AI. Irrelevant documents are automatically rejected.</p>
 
           <!-- DUAL SCAN BUTTONS -->
           <div class="scan-zone">
@@ -415,7 +403,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
               <div class="input-with-mic" style="width: 100%;">
                 <input type="number" id="daily-revenue-input" class="input-field" placeholder="0.00" style="font-size: 1.25rem; font-weight: 700;" value="0.00">
-                <button type="button" class="mic-btn" id="mic-daily-revenue-input" onclick="startVoiceInput('daily-revenue-input', true)" title="Speak Sales Amount"><i data-lucide="mic" style="width:18px;"></i></button>
+                <button type="button" class="mic-btn" onclick="promptVoiceInput('daily-revenue-input', true)" title="Speak Sales Amount"><i data-lucide="mic" style="width:18px;"></i></button>
               </div>
             </div>
 
@@ -491,8 +479,6 @@
         window.enterAppSession(savedUser.email, savedUser.isGuest, savedUser.stallName, true);
       }
       if (typeof lucide !== 'undefined') lucide.createIcons();
-
-      // Pre-flight wake up call to Render backend to prevent spin-down fetch errors
       fetch("https://retail-daily-ledger-ai.onrender.com/").catch(() => {});
     });
 
@@ -645,68 +631,18 @@
       }
     }
 
-    // BULLETPROOF VOICE INPUT WITH SMART PROMPT FALLBACK
-    function startVoiceInput(inputId, isNumber = false) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const statusEl = document.getElementById('scan-status');
-
-      if (!SpeechRecognition) {
-        const manualVal = prompt(isNumber ? "Enter number value:" : "Enter text value:");
-        if (manualVal !== null) {
-          document.getElementById(inputId).value = isNumber ? parseFloat(manualVal || 0).toFixed(2) : manualVal;
+    // BULLETPROOF VOICE PROMPT & INPUT FALLBACK
+    function promptVoiceInput(inputId, isNumber = false) {
+      const promptMsg = isNumber ? "Speak or type numeric value (e.g. 1500):" : "Speak or type text:";
+      const val = prompt(promptMsg);
+      if (val !== null && val.trim() !== "") {
+        const target = document.getElementById(inputId);
+        if (target) {
+          target.value = isNumber ? parseFloat(val.replace(/[^0-9.]/g, '') || 0).toFixed(2) : val.trim();
         }
-        return;
+        const statusEl = document.getElementById('scan-status');
+        if (statusEl) statusEl.innerText = `✅ Voice/Dictation Captured: "${val}"`;
       }
-
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      const micBtn = document.getElementById(`mic-${inputId}`);
-      if (micBtn) micBtn.classList.add('listening');
-      if (statusEl) statusEl.innerText = "🎤 Listening... Speak now.";
-
-      try {
-        recognition.start();
-      } catch (err) {
-        console.warn("Recognition already active", err);
-      }
-
-      recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript.trim();
-        const targetInput = document.getElementById(inputId);
-
-        if (targetInput) {
-          if (isNumber) {
-            const parsedNum = transcript.replace(/[^0-9.]/g, '');
-            targetInput.value = parsedNum ? parseFloat(parsedNum).toFixed(2) : transcript;
-          } else {
-            targetInput.value = transcript;
-          }
-        }
-
-        if (statusEl) statusEl.innerText = `✅ Voice Captured: "${transcript}"`;
-        if (micBtn) micBtn.classList.remove('listening');
-      };
-
-      recognition.onerror = function(event) {
-        if (micBtn) micBtn.classList.remove('listening');
-        const manualVal = prompt(`⚠️ Voice notice (${event.error}). Type value manually:`);
-        if (manualVal !== null && manualVal.trim() !== "") {
-          const targetInput = document.getElementById(inputId);
-          if (targetInput) {
-            targetInput.value = isNumber ? parseFloat(manualVal || 0).toFixed(2) : manualVal;
-          }
-          if (statusEl) statusEl.innerText = "✅ Manual value entered successfully.";
-        } else if (statusEl) {
-          statusEl.innerText = "ℹ️ Voice entry canceled.";
-        }
-      };
-
-      recognition.onend = function() {
-        if (micBtn) micBtn.classList.remove('listening');
-      };
     }
 
     function clearAllData() {
@@ -736,7 +672,6 @@
       const qty = parseInt(document.getElementById('add-qty').value);
       const price = parseFloat(document.getElementById('add-price').value) || 0.00;
       const expiryDate = document.getElementById('add-expiry').value;
-      const demand = document.getElementById('add-demand').value;
 
       if (!itemName || isNaN(qty) || !expiryDate) {
         alert("Please fill in item name, quantity, and expiration date.");
@@ -752,7 +687,6 @@
         qty_remaining: qty,
         unit_price: price,
         expiry: expiryDate,
-        demand: demand,
         sales_count: 0
       });
 
@@ -819,26 +753,26 @@
       let nearExpiryNames = [];
 
       window.inventoryQueue.forEach((batch, index) => {
-        if (batch.sales_count >= 3) batch.demand = 'high';
-        else if (batch.qty_remaining / batch.qty_supplied > 0.8 && batch.sales_count === 0) batch.demand = 'low';
-
-        if (batch.demand === 'high') fastCount++;
-        if (batch.demand === 'low') slowCount++;
-
         const daysLeft = Math.ceil((new Date(batch.expiry) - new Date()) / (1000 * 60 * 60 * 24));
-        if (daysLeft <= 3 && batch.qty_remaining > 0) {
-          nearCount++;
-          nearExpiryNames.push(`${batch.item} (${daysLeft <= 0 ? 'Expired' : daysLeft + 'd left'})`);
-        }
-
         const isNearOrExpired = daysLeft <= 3;
         const isOutOfStock = batch.qty_remaining <= 0;
 
-        let demandBadge = `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">⚡ Normal Demand</span>`;
-        if (batch.demand === 'high') {
-          demandBadge = `<span style="background:rgba(16,185,129,0.15); color:var(--primary-emerald); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">🔥 AI Fast Mover</span>`;
-        } else if (batch.demand === 'low') {
-          demandBadge = `<span style="background:rgba(239,68,68,0.15); color:var(--red-danger); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">🐢 AI Stagnant (Markdown)</span>`;
+        // AUTOMATED AI ACTION RECOMMENDATIONS
+        let aiActionHtml = '';
+        if (isOutOfStock) {
+          aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.2); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🛒 Reorder Immediately</span>`;
+        } else if (isNearOrExpired) {
+          nearCount++;
+          nearExpiryNames.push(`${batch.item} (${daysLeft <= 0 ? 'Expired' : daysLeft + 'd left'})`);
+          aiActionHtml = `<span style="background:rgba(245, 158, 11, 0.2); color:var(--amber-warning); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🏷️ Flash Sale: Markdown 20%</span>`;
+        } else if (batch.sales_count >= 3) {
+          fastCount++;
+          aiActionHtml = `<span style="background:rgba(16, 185, 129, 0.2); color:var(--primary-emerald); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🔥 Fast Mover: Restock Batch</span>`;
+        } else if (batch.qty_remaining / batch.qty_supplied > 0.8 && batch.sales_count === 0) {
+          slowCount++;
+          aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.15); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🐢 Stagnant: Bundle Promotion</span>`;
+        } else {
+          aiActionHtml = `<span style="background:rgba(59, 130, 246, 0.15); color:#60a5fa; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">⚡ Stable Sales</span>`;
         }
 
         const tr = document.createElement('tr');
@@ -846,16 +780,16 @@
           <td>${batch.date}</td>
           <td>
             <strong>${batch.item}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${batch.vendor}</span>
-            ${isOutOfStock ? '<br><span style="background:rgba(239, 68, 68, 0.2); color:var(--red-danger); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">🔴 OUT OF STOCK</span>' : ''}
+            ${isOutOfStock ? '<br><span style="color:var(--red-danger); font-size:0.7rem; font-weight:800;">🔴 OUT OF STOCK</span>' : ''}
           </td>
           <td>${batch.qty_supplied}</td>
           <td><strong style="color:${isOutOfStock ? 'var(--red-danger)' : 'var(--primary-emerald)'};">${batch.qty_remaining}</strong></td>
           <td>ZMW ${(batch.unit_price || 0).toFixed(2)}</td>
           <td>
             <div style="display: flex; flex-direction: column; gap: 0.3rem;">
-              ${demandBadge}
-              <span style="font-size: 0.75rem; font-weight: 700; color: ${isNearOrExpired ? 'var(--red-danger)' : 'var(--primary-emerald)'};">
-                ${daysLeft <= 0 ? '⚠️ Expired' : daysLeft + ' days left'}
+              ${aiActionHtml}
+              <span style="font-size: 0.75rem; font-weight: 700; color: ${isNearOrExpired ? 'var(--red-danger)' : 'var(--text-muted)'};">
+                ${daysLeft <= 0 ? '⚠️ Expired' : daysLeft + ' days until expiry'}
               </span>
             </div>
           </td>
@@ -1024,7 +958,7 @@
       if (!file) return;
 
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerText = "⏳ AI analyzing supplier receipt (Waking up Render server)...";
+      statusEl.innerText = "⏳ AI analyzing supplier receipt...";
 
       const base64Image = await fileToBase64(file).catch(() => null);
       const formData = new FormData();
@@ -1059,7 +993,6 @@
               qty_remaining: Number(item.quantity || 1),
               unit_price: Number(item.unit_price || item.price || 0),
               expiry: item.expiry_date || new Date(Date.now() + 90*24*60*60*1000).toISOString().split('T')[0],
-              demand: 'normal',
               sales_count: 0
             });
           });
@@ -1077,9 +1010,9 @@
         renderVault();
 
         window.saveStateToCloud();
-        statusEl.innerText = `✅ AI Verified & Parsed "${vendorName}" for ZMW ${totalAmt}! Inventory & Expenses updated.`;
+        statusEl.innerText = `✅ AI Verified & Parsed "${vendorName}" for ZMW ${totalAmt}!`;
       } catch (err) {
-        statusEl.innerText = "❌ Upload failed: " + err.message + " (Make sure Render is awake and online).";
+        statusEl.innerText = "❌ Upload failed: " + err.message;
       }
     }
 
@@ -1134,7 +1067,7 @@
         renderVault();
 
         window.saveStateToCloud();
-        statusEl.innerText = `✅ Z-Report Verified! Added ZMW ${zTotal.toFixed(2)} to revenue & deducted sold stock.`;
+        statusEl.innerText = `✅ Z-Report Verified! Added ZMW ${zTotal.toFixed(2)} to revenue.`;
       } catch (err) {
         statusEl.innerText = "❌ Error uploading Z-Report: " + err.message;
       }

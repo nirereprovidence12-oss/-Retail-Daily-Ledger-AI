@@ -6,14 +6,11 @@ require('dotenv').config();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Enable CORS for all domains so Firebase Hosting can talk to Render
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
 
@@ -38,7 +35,7 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
       }
     };
 
-    const prompt = `Analyze this uploaded retail document (which could be a supplier receipt, invoice, or register Z-report). 
+    const prompt = `Analyze this uploaded retail document (supplier receipt, invoice, or register Z-report). 
     Extract the following JSON structure strictly:
     {
       "Vendor": "Name of supplier or store",
@@ -48,7 +45,7 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
       ],
       "DocumentType": "Receipt or ZReport or Irrelevant"
     }
-    If the image is a blank paper, selfie, or irrelevant document with no business ledger data, set DocumentType to "Irrelevant" and Total to 0.`;
+    If the image is blank, a selfie, or irrelevant, set DocumentType to "Irrelevant" and Total to 0.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
