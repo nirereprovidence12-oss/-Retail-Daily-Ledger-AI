@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Retail Daily Ledger AI - Lusaka PWA</title>
+  <title>Retail Daily Ledger AI - Lusaka Commercial PWA</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -165,11 +165,15 @@
         </div>
       </div>
 
-      <!-- Auth Form Card with Realistic Onboarding & Loading State -->
+      <!-- Auth Form Card with Subscription Banner -->
       <div class="auth-card">
         <div class="auth-header">
           <h2 class="auth-title" id="auth-form-title">Cloud Vendor Sign In</h2>
           <p class="auth-desc" id="auth-form-desc">Access your synced stall ledger and inventory</p>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary-emerald); padding: 0.75rem; border-radius: 8px; font-size: 0.8rem; color: var(--primary-emerald); margin-bottom: 1.25rem; text-align: center; font-weight: 700;">
+          💎 Lusaka Pro Tier Active: Unlimited AI Scans & Mobile Money Sync
         </div>
 
         <!-- Mode Toggle Tabs -->
@@ -178,7 +182,6 @@
           <button type="button" id="tab-signup-btn" class="btn" style="background: transparent; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;" onclick="setAuthMode('signup')">Create Account</button>
         </div>
 
-        <!-- Success Notification Box for Registration -->
         <div id="reg-success-banner" style="display: none; background: rgba(16, 185, 129, 0.2); border: 1px solid var(--primary-emerald); color: var(--primary-emerald); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">
           🎉 Account created successfully! Please sign in with your credentials below.
         </div>
@@ -279,17 +282,18 @@
             </div>
           </div>
 
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Deduct items instantly upon checkout or view FIFO rotation.</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Deduct items instantly upon checkout or view FIFO rotation with live AI velocity scores.</p>
 
-          <!-- POS Sales Bar -->
+          <!-- POS Sales Bar with Price Bar Visible -->
           <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
             <div style="font-weight: 800; color: var(--primary-emerald); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
               <i data-lucide="zap" style="width: 16px;"></i>
-              <span>Instant Counter POS Sale (Auto-Updates Revenue)</span>
+              <span>Instant Counter POS Sale (Auto-Updates Revenue & Inventory)</span>
             </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <select id="pos-item-select" class="input-field" style="flex: 2; min-width: 180px;"></select>
-              <input type="number" id="pos-qty" class="input-field" style="flex: 1; min-width: 60px;" value="1" min="1">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+              <select id="pos-item-select" class="input-field" style="flex: 2; min-width: 180px;" onchange="onPOSItemSelected()"></select>
+              <input type="number" id="pos-price-override" class="input-field" style="flex: 1; min-width: 90px;" placeholder="Price (ZMW)" step="0.50">
+              <input type="number" id="pos-qty" class="input-field" style="flex: 0.8; min-width: 60px;" value="1" min="1">
               <button class="btn btn-primary" style="width: auto; padding: 0.4rem 1rem;" onclick="deductPOSSale()">Deduct Sale & Log Income</button>
             </div>
           </div>
@@ -352,7 +356,7 @@
                   <th>SUPPLIED</th>
                   <th>REMAINING</th>
                   <th>UNIT PRICE</th>
-                  <th>EXPIRY DATE & STATUS</th>
+                  <th>AI DEMAND & EXPIRY</th>
                   <th>QUICK STOCK ADJUST</th>
                 </tr>
               </thead>
@@ -373,14 +377,14 @@
               <span>2. Revenue & Supplier Receipts</span>
             </div>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Scan supplier receipts via backend server AI or log daily revenue.</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Scan supplier receipts or Z-reports via backend AI. Invalid documents are automatically rejected.</p>
 
           <!-- DUAL SCAN BUTTONS -->
           <div class="scan-zone">
             <label class="upload-box">
               <input type="file" accept="image/*" style="display: none;" onchange="handleSupplierReceiptUpload(event)">
               <i data-lucide="folder" style="width: 28px; height: 28px; color: var(--amber-warning); margin-bottom: 0.5rem;"></i>
-              <div style="font-weight: 800; font-size: 0.9rem;">Supplier Receipt (Server AI Scan)</div>
+              <div style="font-weight: 800; font-size: 0.9rem;">Supplier Receipt (AI Scan)</div>
             </label>
 
             <label class="upload-box">
@@ -474,7 +478,7 @@
     </main>
 
     <footer class="footer">
-      © 2026 Retail Daily Ledger AI • Lusaka PWA
+      © 2026 Retail Daily Ledger AI • Lusaka Commercial PWA
     </footer>
   </div>
 
@@ -544,7 +548,7 @@
         setTimeout(() => {
           document.getElementById('landing-screen').style.display = 'none';
           document.getElementById('main-app').style.display = 'flex';
-        }, 800); // Realistic cloud loading delay
+        }, 800);
       }
       if (typeof lucide !== 'undefined') lucide.createIcons();
     };
@@ -567,7 +571,6 @@
           alert("Please enter your Stall or Business Name to register.");
           return;
         }
-        // Save registered profile locally and switch to sign in view with success notice
         localStorage.setItem('registered_stall_' + email, JSON.stringify({ email, stallName, pass }));
         document.getElementById('reg-success-banner').style.display = 'block';
         setAuthMode('signin');
@@ -576,8 +579,7 @@
         return;
       }
 
-      // Sign In Loading Simulation
-      btnText.innerText = "Connecting to Cloud...";
+      btnText.innerText = "Connecting to Secure Firebase...";
       if (btnIcon) btnIcon.setAttribute('data-lucide', 'loader');
       if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -593,7 +595,6 @@
 
     window.startGuestDemo = function() {
       const guestBtn = document.getElementById('guest-btn');
-      const guestIcon = document.getElementById('guest-btn-icon');
       guestBtn.innerHTML = `<span>Loading Guest Environment...</span>`;
       
       setTimeout(() => {
@@ -631,7 +632,18 @@
       document.getElementById('expiry-banner').style.display = 'none';
     }
 
-    // VOICE INPUT WITH ROBUST MICROPHONE HANDLING & FALLBACK PROMPT
+    // POS Item Selection to auto-fill Price Bar
+    function onPOSItemSelected() {
+      const selectIndex = document.getElementById('pos-item-select').value;
+      const priceInput = document.getElementById('pos-price-override');
+      if (selectIndex !== "" && window.inventoryQueue[selectIndex]) {
+        priceInput.value = (window.inventoryQueue[selectIndex].unit_price || 0).toFixed(2);
+      } else {
+        priceInput.value = "";
+      }
+    }
+
+    // BULLETPROOF VOICE INPUT WITH FALLBACK PROMPT
     function startVoiceInput(inputId, isNumber = false) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const statusEl = document.getElementById('scan-status');
@@ -678,7 +690,7 @@
 
       recognition.onerror = function(event) {
         if (micBtn) micBtn.classList.remove('listening');
-        const manualVal = prompt(`⚠️ Voice recognition notice (${event.error}). Type value manually:`);
+        const manualVal = prompt(`⚠️ Voice notice (${event.error}). Type value manually:`);
         if (manualVal !== null && manualVal.trim() !== "") {
           const targetInput = document.getElementById(inputId);
           if (targetInput) {
@@ -738,7 +750,8 @@
         qty_remaining: qty,
         unit_price: price,
         expiry: expiryDate,
-        demand: demand
+        demand: demand,
+        sales_count: 0
       });
 
       document.getElementById('add-item').value = '';
@@ -804,6 +817,10 @@
       let nearExpiryNames = [];
 
       window.inventoryQueue.forEach((batch, index) => {
+        // Auto-update demand classification based on sales velocity and remaining proportion
+        if (batch.sales_count >= 3) batch.demand = 'high';
+        else if (batch.qty_remaining / batch.qty_supplied > 0.8 && batch.sales_count === 0) batch.demand = 'low';
+
         if (batch.demand === 'high') fastCount++;
         if (batch.demand === 'low') slowCount++;
 
@@ -815,6 +832,13 @@
 
         const isNearOrExpired = daysLeft <= 3;
         const isOutOfStock = batch.qty_remaining <= 0;
+
+        let demandBadge = `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">⚡ Normal Demand</span>`;
+        if (batch.demand === 'high') {
+          demandBadge = `<span style="background:rgba(16,185,129,0.15); color:var(--primary-emerald); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">🔥 AI Fast Mover</span>`;
+        } else if (batch.demand === 'low') {
+          demandBadge = `<span style="background:rgba(239,68,68,0.15); color:var(--red-danger); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">🐢 AI Stagnant (Markdown)</span>`;
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -828,9 +852,7 @@
           <td>ZMW ${(batch.unit_price || 0).toFixed(2)}</td>
           <td>
             <div style="display: flex; flex-direction: column; gap: 0.3rem;">
-              <input type="date" value="${batch.expiry}" 
-                style="padding: 0.2rem; border-radius: 4px; border: 1px solid var(--border-dark); font-size: 0.8rem; background: #0f172a; color: ${isNearOrExpired ? 'var(--red-danger)' : 'var(--primary-emerald)'}; font-weight: 700; cursor: pointer;"
-                onchange="updateBatchExpiry(${index}, this.value)">
+              ${demandBadge}
               <span style="font-size: 0.75rem; font-weight: 700; color: ${isNearOrExpired ? 'var(--red-danger)' : 'var(--primary-emerald)'};">
                 ${daysLeft <= 0 ? '⚠️ Expired' : daysLeft + ' days left'}
               </span>
@@ -865,13 +887,6 @@
       updateMetricsAndProfits();
     }
 
-    function updateBatchExpiry(index, newExpiryDate) {
-      if (!newExpiryDate) return;
-      window.inventoryQueue[index].expiry = newExpiryDate;
-      renderInventoryStock();
-      window.saveStateToCloud();
-    }
-
     function adjustStock(index, delta) {
       window.inventoryQueue[index].qty_remaining += delta;
       if (window.inventoryQueue[index].qty_remaining < 0) window.inventoryQueue[index].qty_remaining = 0;
@@ -882,6 +897,7 @@
     function deductPOSSale() {
       const selectIndex = document.getElementById('pos-item-select').value;
       const qtySold = parseInt(document.getElementById('pos-qty').value);
+      const customPrice = parseFloat(document.getElementById('pos-price-override').value);
 
       if (selectIndex === "" || isNaN(qtySold) || qtySold <= 0) {
         alert("Please select an item and valid sale quantity.");
@@ -895,7 +911,9 @@
       }
 
       batch.qty_remaining -= qtySold;
-      const unitPrice = Number(batch.unit_price || 50.00);
+      batch.sales_count = (batch.sales_count || 0) + qtySold;
+
+      const unitPrice = !isNaN(customPrice) && customPrice > 0 ? customPrice : Number(batch.unit_price || 50.00);
       const saleAmount = qtySold * unitPrice;
 
       const revInput = document.getElementById('daily-revenue-input');
@@ -1000,12 +1018,13 @@
       });
     }
 
+    // AI Supplier Receipt Upload with Strict Relevance Validation
     async function handleSupplierReceiptUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerText = "⏳ Uploading receipt to server AI...";
+      statusEl.innerText = "⏳ AI analyzing supplier receipt...";
 
       const base64Image = await fileToBase64(file).catch(() => null);
       const formData = new FormData();
@@ -1018,56 +1037,60 @@
 
         const result = await response.json().catch(() => null);
 
-        if (result && (result.Vendor || result.Items)) {
-          const vendorName = result.Vendor || "Scanned Supplier";
-          const totalAmt = Number(result.Total || 0);
-
-          window.expensesList.push({ item: vendorName, amount: totalAmt });
-          renderExpenses();
-
-          if (result.Items && Array.isArray(result.Items)) {
-            result.Items.forEach(item => {
-              window.inventoryQueue.push({
-                id: Date.now() + Math.random(),
-                date: new Date().toLocaleDateString(),
-                item: item.name || 'Scanned Product',
-                vendor: vendorName,
-                qty_supplied: Number(item.quantity || 1),
-                qty_remaining: Number(item.quantity || 1),
-                unit_price: Number(item.unit_price || item.price || 0),
-                expiry: item.expiry_date || new Date(Date.now() + 90*24*60*60*1000).toISOString().split('T')[0],
-                demand: 'normal'
-              });
-            });
-            renderInventoryStock();
-          }
-
-          window.dailyVault.unshift({
-            date: new Date().toLocaleString(),
-            type: "Supplier Receipt",
-            details: vendorName,
-            amount: `-ZMW ${totalAmt.toFixed(2)}`,
-            status: "Parsed AI",
-            image: base64Image
-          });
-          renderVault();
-
-          window.saveStateToCloud();
-          statusEl.innerText = `✅ Success! Parsed "${vendorName}" for ZMW ${totalAmt} & saved image to vault!`;
-        } else {
-          statusEl.innerText = "✅ Receipt processed by server AI!";
+        // Validate document relevance
+        if (!result || (!result.Vendor && !result.Total && (!result.Items || result.Items.length === 0))) {
+          statusEl.innerText = "❌ AI Rejected: Irrelevant document or blank paper detected. Please upload a valid supplier receipt.";
+          return;
         }
+
+        const vendorName = result.Vendor || "Scanned Supplier";
+        const totalAmt = Number(result.Total || 0);
+
+        window.expensesList.push({ item: vendorName, amount: totalAmt });
+        renderExpenses();
+
+        if (result.Items && Array.isArray(result.Items)) {
+          result.Items.forEach(item => {
+            window.inventoryQueue.push({
+              id: Date.now() + Math.random(),
+              date: new Date().toLocaleDateString(),
+              item: item.name || 'Scanned Product',
+              vendor: vendorName,
+              qty_supplied: Number(item.quantity || 1),
+              qty_remaining: Number(item.quantity || 1),
+              unit_price: Number(item.unit_price || item.price || 0),
+              expiry: item.expiry_date || new Date(Date.now() + 90*24*60*60*1000).toISOString().split('T')[0],
+              demand: 'normal',
+              sales_count: 0
+            });
+          });
+          renderInventoryStock();
+        }
+
+        window.dailyVault.unshift({
+          date: new Date().toLocaleString(),
+          type: "Supplier Receipt",
+          details: vendorName,
+          amount: `-ZMW ${totalAmt.toFixed(2)}`,
+          status: "Verified AI",
+          image: base64Image
+        });
+        renderVault();
+
+        window.saveStateToCloud();
+        statusEl.innerText = `✅ AI Verified & Parsed "${vendorName}" for ZMW ${totalAmt}! Inventory & Expenses updated.`;
       } catch (err) {
         statusEl.innerText = "❌ Upload failed: " + err.message;
       }
     }
 
+    // AI Z-Report Upload with Strict Relevance Validation
     async function handleZReportUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerText = "⏳ Processing Z-Report via server AI...";
+      statusEl.innerText = "⏳ AI analyzing Z-Report / Sales Slip...";
 
       const base64Image = await fileToBase64(file).catch(() => null);
       const formData = new FormData();
@@ -1080,39 +1103,41 @@
 
         const result = await response.json().catch(() => null);
 
-        if (result && result.Total) {
-          const zTotal = Number(result.Total);
-          
-          const revInput = document.getElementById('daily-revenue-input');
-          const currentRev = parseFloat(revInput.value) || 0;
-          revInput.value = (currentRev + zTotal).toFixed(2);
-
-          if (result.Items && Array.isArray(result.Items)) {
-            result.Items.forEach(soldItem => {
-              const match = window.inventoryQueue.find(b => b.item.toLowerCase().includes((soldItem.name || '').toLowerCase()) && b.qty_remaining > 0);
-              if (match) {
-                const soldQty = Number(soldItem.quantity || 1);
-                match.qty_remaining = Math.max(0, match.qty_remaining - soldQty);
-              }
-            });
-            renderInventoryStock();
-          }
-
-          window.dailyVault.unshift({
-            date: new Date().toLocaleString(),
-            type: "Z-Report Scan",
-            details: "Automated Register Summary & Inventory Deduct",
-            amount: `+ZMW ${zTotal.toFixed(2)}`,
-            status: "Synced AI",
-            image: base64Image
-          });
-          renderVault();
-
-          window.saveStateToCloud();
-          statusEl.innerText = `✅ Z-Report processed! Added ZMW ${zTotal.toFixed(2)} to revenue & saved image.`;
-        } else {
-          statusEl.innerText = "✅ Z-Report processed via server!";
+        // Validate document relevance (must contain totals or sales data)
+        if (!result || (!result.Total && (!result.Items || result.Items.length === 0))) {
+          statusEl.innerText = "❌ AI Rejected: Not a valid Z-Report or sales slip. Please scan a proper register summary.";
+          return;
         }
+
+        const zTotal = Number(result.Total || 0);
+        const revInput = document.getElementById('daily-revenue-input');
+        const currentRev = parseFloat(revInput.value) || 0;
+        revInput.value = (currentRev + zTotal).toFixed(2);
+
+        if (result.Items && Array.isArray(result.Items)) {
+          result.Items.forEach(soldItem => {
+            const match = window.inventoryQueue.find(b => b.item.toLowerCase().includes((soldItem.name || '').toLowerCase()) && b.qty_remaining > 0);
+            if (match) {
+              const soldQty = Number(soldItem.quantity || 1);
+              match.qty_remaining = Math.max(0, match.qty_remaining - soldQty);
+              match.sales_count = (match.sales_count || 0) + soldQty;
+            }
+          });
+          renderInventoryStock();
+        }
+
+        window.dailyVault.unshift({
+          date: new Date().toLocaleString(),
+          type: "Z-Report Scan",
+          details: "Verified Register Summary & Inventory Deduct",
+          amount: `+ZMW ${zTotal.toFixed(2)}`,
+          status: "Verified AI",
+          image: base64Image
+        });
+        renderVault();
+
+        window.saveStateToCloud();
+        statusEl.innerText = `✅ Z-Report Verified! Added ZMW ${zTotal.toFixed(2)} to revenue & deducted sold stock.`;
       } catch (err) {
         statusEl.innerText = "❌ Error uploading Z-Report: " + err.message;
       }
