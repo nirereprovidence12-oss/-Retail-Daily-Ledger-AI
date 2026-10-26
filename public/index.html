@@ -491,6 +491,9 @@
         window.enterAppSession(savedUser.email, savedUser.isGuest, savedUser.stallName, true);
       }
       if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      // Pre-flight wake up call to Render backend to prevent spin-down fetch errors
+      fetch("https://retail-daily-ledger-ai.onrender.com/").catch(() => {});
     });
 
     window.setAuthMode = function(mode) {
@@ -579,7 +582,7 @@
         return;
       }
 
-      btnText.innerText = "Connecting to Secure Firebase...";
+      btnText.innerText = "Connecting to Secure Cloud...";
       if (btnIcon) btnIcon.setAttribute('data-lucide', 'loader');
       if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -632,7 +635,6 @@
       document.getElementById('expiry-banner').style.display = 'none';
     }
 
-    // POS Item Selection to auto-fill Price Bar
     function onPOSItemSelected() {
       const selectIndex = document.getElementById('pos-item-select').value;
       const priceInput = document.getElementById('pos-price-override');
@@ -643,7 +645,7 @@
       }
     }
 
-    // BULLETPROOF VOICE INPUT WITH FALLBACK PROMPT
+    // BULLETPROOF VOICE INPUT WITH SMART PROMPT FALLBACK
     function startVoiceInput(inputId, isNumber = false) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const statusEl = document.getElementById('scan-status');
@@ -817,7 +819,6 @@
       let nearExpiryNames = [];
 
       window.inventoryQueue.forEach((batch, index) => {
-        // Auto-update demand classification based on sales velocity and remaining proportion
         if (batch.sales_count >= 3) batch.demand = 'high';
         else if (batch.qty_remaining / batch.qty_supplied > 0.8 && batch.sales_count === 0) batch.demand = 'low';
 
@@ -1018,13 +1019,12 @@
       });
     }
 
-    // AI Supplier Receipt Upload with Strict Relevance Validation
     async function handleSupplierReceiptUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerText = "⏳ AI analyzing supplier receipt...";
+      statusEl.innerText = "⏳ AI analyzing supplier receipt (Waking up Render server)...";
 
       const base64Image = await fileToBase64(file).catch(() => null);
       const formData = new FormData();
@@ -1037,9 +1037,8 @@
 
         const result = await response.json().catch(() => null);
 
-        // Validate document relevance
-        if (!result || (!result.Vendor && !result.Total && (!result.Items || result.Items.length === 0))) {
-          statusEl.innerText = "❌ AI Rejected: Irrelevant document or blank paper detected. Please upload a valid supplier receipt.";
+        if (!result || result.DocumentType === "Irrelevant" || (!result.Vendor && !result.Total && (!result.Items || result.Items.length === 0))) {
+          statusEl.innerText = "❌ AI Rejected: Irrelevant document detected. Please upload a valid supplier receipt.";
           return;
         }
 
@@ -1080,11 +1079,10 @@
         window.saveStateToCloud();
         statusEl.innerText = `✅ AI Verified & Parsed "${vendorName}" for ZMW ${totalAmt}! Inventory & Expenses updated.`;
       } catch (err) {
-        statusEl.innerText = "❌ Upload failed: " + err.message;
+        statusEl.innerText = "❌ Upload failed: " + err.message + " (Make sure Render is awake and online).";
       }
     }
 
-    // AI Z-Report Upload with Strict Relevance Validation
     async function handleZReportUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1103,9 +1101,8 @@
 
         const result = await response.json().catch(() => null);
 
-        // Validate document relevance (must contain totals or sales data)
-        if (!result || (!result.Total && (!result.Items || result.Items.length === 0))) {
-          statusEl.innerText = "❌ AI Rejected: Not a valid Z-Report or sales slip. Please scan a proper register summary.";
+        if (!result || result.DocumentType === "Irrelevant" || (!result.Total && (!result.Items || result.Items.length === 0))) {
+          statusEl.innerText = "❌ AI Rejected: Not a valid Z-Report. Please upload a proper sales register summary.";
           return;
         }
 
