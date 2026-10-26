@@ -165,7 +165,7 @@
         </div>
       </div>
 
-      <!-- Auth Form Card with Realistic Account Registration & Login -->
+      <!-- Auth Form Card with Realistic Onboarding & Loading State -->
       <div class="auth-card">
         <div class="auth-header">
           <h2 class="auth-title" id="auth-form-title">Cloud Vendor Sign In</h2>
@@ -176,6 +176,11 @@
         <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: #0f172a; padding: 4px; border-radius: 8px; border: 1px solid var(--border-dark);">
           <button type="button" id="tab-signin-btn" class="btn" style="background: var(--primary-emerald); color: white; font-size: 0.85rem; padding: 0.5rem;" onclick="setAuthMode('signin')">Sign In</button>
           <button type="button" id="tab-signup-btn" class="btn" style="background: transparent; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;" onclick="setAuthMode('signup')">Create Account</button>
+        </div>
+
+        <!-- Success Notification Box for Registration -->
+        <div id="reg-success-banner" style="display: none; background: rgba(16, 185, 129, 0.2); border: 1px solid var(--primary-emerald); color: var(--primary-emerald); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">
+          🎉 Account created successfully! Please sign in with your credentials below.
         </div>
 
         <form id="auth-form" autocomplete="off" onsubmit="handleAuthAction(event)">
@@ -196,14 +201,14 @@
           </div>
           <button type="submit" class="btn btn-primary" id="auth-btn">
             <span id="auth-btn-text">Sign In to Dashboard</span>
-            <i data-lucide="arrow-right"></i>
+            <i data-lucide="arrow-right" id="auth-btn-icon"></i>
           </button>
         </form>
 
         <div class="divider">OR</div>
 
-        <button onclick="startGuestDemo()" class="btn btn-secondary">
-          <i data-lucide="play-circle"></i>
+        <button onclick="startGuestDemo()" class="btn btn-secondary" id="guest-btn">
+          <i data-lucide="play-circle" id="guest-btn-icon"></i>
           <span>Explore Offline Guest Mode</span>
         </button>
       </div>
@@ -479,7 +484,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       const savedUser = JSON.parse(localStorage.getItem('retail_user_session'));
       if (savedUser) {
-        window.enterAppSession(savedUser.email, savedUser.isGuest, savedUser.stallName);
+        window.enterAppSession(savedUser.email, savedUser.isGuest, savedUser.stallName, true);
       }
       if (typeof lucide !== 'undefined') lucide.createIcons();
     });
@@ -492,6 +497,9 @@
       const signInBtn = document.getElementById('tab-signin-btn');
       const signUpBtn = document.getElementById('tab-signup-btn');
       const stallGroup = document.getElementById('stall-name-group');
+      const successBanner = document.getElementById('reg-success-banner');
+
+      if (successBanner) successBanner.style.display = 'none';
 
       if (mode === 'signin') {
         titleEl.innerText = "Cloud Vendor Sign In";
@@ -505,7 +513,7 @@
       } else {
         titleEl.innerText = "Create Cloud Account";
         descEl.innerText = "Register your stall for multi-device cloud sync";
-        btnTextEl.innerText = "Register Account & Launch";
+        btnTextEl.innerText = "Register New Account";
         signUpBtn.style.background = "var(--primary-emerald)";
         signUpBtn.style.color = "white";
         signInBtn.style.background = "transparent";
@@ -514,7 +522,7 @@
       }
     };
 
-    window.enterAppSession = function(email, isGuest = false, stallName = '') {
+    window.enterAppSession = function(email, isGuest = false, stallName = '', skipAnimation = false) {
       const displayName = stallName || (email ? email.split('@')[0] : 'Vendor');
       document.getElementById('user-display').innerText = isGuest ? "Guest Mode" : displayName;
       
@@ -529,8 +537,15 @@
         btn.style.color = "#fff";
       }
 
-      document.getElementById('landing-screen').style.display = 'none';
-      document.getElementById('main-app').style.display = 'flex';
+      if (skipAnimation) {
+        document.getElementById('landing-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
+      } else {
+        setTimeout(() => {
+          document.getElementById('landing-screen').style.display = 'none';
+          document.getElementById('main-app').style.display = 'flex';
+        }, 800); // Realistic cloud loading delay
+      }
       if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
@@ -539,21 +554,53 @@
       const email = document.getElementById('auth-email').value.trim();
       const pass = document.getElementById('auth-password').value;
       const stallName = document.getElementById('auth-stall-name').value.trim();
+      const btnText = document.getElementById('auth-btn-text');
+      const btnIcon = document.getElementById('auth-btn-icon');
 
       if (!email || !pass) {
         alert("Please enter both email and password.");
         return;
       }
 
-      if (currentAuthMode === 'signup' && !stallName) {
-        alert("Please enter your Stall or Business Name to register.");
+      if (currentAuthMode === 'signup') {
+        if (!stallName) {
+          alert("Please enter your Stall or Business Name to register.");
+          return;
+        }
+        // Save registered profile locally and switch to sign in view with success notice
+        localStorage.setItem('registered_stall_' + email, JSON.stringify({ email, stallName, pass }));
+        document.getElementById('reg-success-banner').style.display = 'block';
+        setAuthMode('signin');
+        document.getElementById('auth-email').value = email;
+        document.getElementById('auth-password').value = '';
         return;
       }
 
-      const activeStall = currentAuthMode === 'signup' ? stallName : (email.split('@')[0]);
-      const session = { email, stallName: activeStall, isGuest: false, loggedInAt: new Date().toISOString() };
-      localStorage.setItem('retail_user_session', JSON.stringify(session));
-      window.enterAppSession(email, false, activeStall);
+      // Sign In Loading Simulation
+      btnText.innerText = "Connecting to Cloud...";
+      if (btnIcon) btnIcon.setAttribute('data-lucide', 'loader');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      setTimeout(() => {
+        const storedReg = JSON.parse(localStorage.getItem('registered_stall_' + email) || '{}');
+        const activeStall = storedReg.stallName || email.split('@')[0];
+        
+        const session = { email, stallName: activeStall, isGuest: false, loggedInAt: new Date().toISOString() };
+        localStorage.setItem('retail_user_session', JSON.stringify(session));
+        window.enterAppSession(email, false, activeStall);
+      }, 1000);
+    };
+
+    window.startGuestDemo = function() {
+      const guestBtn = document.getElementById('guest-btn');
+      const guestIcon = document.getElementById('guest-btn-icon');
+      guestBtn.innerHTML = `<span>Loading Guest Environment...</span>`;
+      
+      setTimeout(() => {
+        const session = { email: "guest@lusakaretail.com", stallName: "Guest Market Stall", isGuest: true, loggedInAt: new Date().toISOString() };
+        localStorage.setItem('retail_user_session', JSON.stringify(session));
+        window.enterAppSession("guest@lusakaretail.com", true, "Guest Market Stall");
+      }, 800);
     };
 
     window.logout = function() {
@@ -573,12 +620,6 @@
       updateMetricsAndProfits();
     });
 
-    function startGuestDemo() {
-      const session = { email: "guest@lusakaretail.com", stallName: "Guest Market Stall", isGuest: true, loggedInAt: new Date().toISOString() };
-      localStorage.setItem('retail_user_session', JSON.stringify(session));
-      window.enterAppSession("guest@lusakaretail.com", true, "Guest Market Stall");
-    }
-
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -590,7 +631,7 @@
       document.getElementById('expiry-banner').style.display = 'none';
     }
 
-    // BULLETPROOF VOICE INPUT WITH FALLBACK PROMPT
+    // VOICE INPUT WITH ROBUST MICROPHONE HANDLING & FALLBACK PROMPT
     function startVoiceInput(inputId, isNumber = false) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const statusEl = document.getElementById('scan-status');
@@ -637,8 +678,7 @@
 
       recognition.onerror = function(event) {
         if (micBtn) micBtn.classList.remove('listening');
-        // Fallback to prompt if speech times out or fails
-        const manualVal = prompt(`⚠️ Voice timeout (${event.error}). Type value manually:`);
+        const manualVal = prompt(`⚠️ Voice recognition notice (${event.error}). Type value manually:`);
         if (manualVal !== null && manualVal.trim() !== "") {
           const targetInput = document.getElementById(inputId);
           if (targetInput) {
