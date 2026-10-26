@@ -196,6 +196,41 @@
     </footer>
   </div>
 
+  <!-- Auth Overlay Modal -->
+<div id="authModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+    <h2 id="authTitle" class="text-2xl font-bold mb-4 text-gray-800">Sign In to Ledger</h2>
+    
+    <form id="authForm" class="space-y-4">
+      <!-- Shop Name Field (Only visible during Sign Up) -->
+      <div id="shopNameContainer" class="hidden">
+        <label class="block text-sm font-medium text-gray-700">Shop Name</label>
+        <input type="text" id="shopNameInput" class="w-full border rounded-lg p-2.5 mt-1" placeholder="e.g. Lusaka Providence Store">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email Address</label>
+        <input type="email" id="emailInput" required class="w-full border rounded-lg p-2.5 mt-1" placeholder="owner@store.com">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="passwordInput" required class="w-full border rounded-lg p-2.5 mt-1" placeholder="••••••••">
+      </div>
+
+      <button type="submit" id="authSubmitBtn" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition">
+        Sign In
+      </button>
+    </form>
+
+    <!-- Toggle between Sign In and Sign Up -->
+    <div class="mt-4 text-center text-sm text-gray-600">
+      <span id="toggleText">Don't have an account?</span>
+      <button id="toggleAuthBtn" class="text-blue-600 font-semibold ml-1 hover:underline">Sign Up</button>
+    </div>
+  </div>
+</div>
+
   <!-- 2. MAIN APPLICATION WORKSPACE -->
   <div id="main-app">
     <header class="app-header">
@@ -1003,5 +1038,27 @@
       window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     }
   </script>
+  <!-- Firebase SDK & Config Module -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      window.auth = getAuth(app);
+      window.db = getFirestore(app);
+      
+      console.log("Firebase connected successfully!");
+    </script>
 </body>
 </html>
