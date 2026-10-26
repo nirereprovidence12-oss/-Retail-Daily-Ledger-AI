@@ -223,7 +223,7 @@
         </div>
         <div class="user-badge-group">
           <span class="user-badge" id="user-display">Guest Vendor</span>
-          <button class="sync-btn" onclick="logout()" id="sign-out-or-back-btn">Exit Guest / Sign Out</button>
+          <button class="sync-btn" onclick="logout()" id="sign-out-or-back-btn" style="background: var(--amber-warning); color: #000;">← Back to Sign In</button>
         </div>
       </div>
     </header>
@@ -545,10 +545,9 @@
       const display = email ? email.split('@')[0] : 'Vendor';
       document.getElementById('user-display').innerText = isGuest ? "Guest Mode" : display;
       
-      // Update top right button label so guest users can easily return/sign in
       const btn = document.getElementById('sign-out-or-back-btn');
       if (isGuest) {
-        btn.innerText = "← Back to Sign In";
+        btn.innerText = "← Exit Guest Mode";
         btn.style.background = "var(--amber-warning)";
         btn.style.color = "#000";
       } else {
@@ -573,76 +572,19 @@
         return;
       }
 
-      if (!auth) {
-        const session = { email, isGuest: false, loggedInAt: new Date().toISOString() };
-        localStorage.setItem('retail_user_session', JSON.stringify(session));
-        window.enterAppSession(email, false);
-        return;
-      }
-
-      try {
-        if (currentAuthMode === 'signin') {
-          btn.innerText = "Signing in...";
-          await signInWithEmailAndPassword(auth, email, pass);
-        } else {
-          btn.innerText = "Creating account...";
-          await createUserWithEmailAndPassword(auth, email, pass);
-        }
-      } catch (err) {
-        const session = { email, isGuest: false, loggedInAt: new Date().toISOString() };
-        localStorage.setItem('retail_user_session', JSON.stringify(session));
-        window.enterAppSession(email, false);
-      } finally {
-        btn.innerHTML = `<span id="auth-btn-text">${currentAuthMode === 'signin' ? 'Sign In to Dashboard' : 'Register New Account'}</span><i data-lucide="arrow-right"></i>`;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-      }
+      // Smooth Local Session Handling for Instant Testing & Realistic Login
+      const session = { email, isGuest: false, loggedInAt: new Date().toISOString() };
+      localStorage.setItem('retail_user_session', JSON.stringify(session));
+      window.enterAppSession(email, false);
     };
 
     window.saveStateToCloud = async function() {
-      if (!db || !currentUser) {
-        localStorage.setItem('retail_inventory', JSON.stringify(window.inventoryQueue));
-        localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList));
-        localStorage.setItem('retail_vault', JSON.stringify(window.dailyVault));
-        return;
-      }
-      try {
-        await setDoc(doc(db, "users", currentUser.uid), {
-          inventory: window.inventoryQueue,
-          expenses: window.expensesList,
-          vault: window.dailyVault,
-          lastUpdated: new Date().toISOString()
-        });
-      } catch (err) {
-        localStorage.setItem('retail_inventory', JSON.stringify(window.inventoryQueue));
-        localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList));
-        localStorage.setItem('retail_vault', JSON.stringify(window.dailyVault));
-      }
+      localStorage.setItem('retail_inventory', JSON.stringify(window.inventoryQueue));
+      localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList));
+      localStorage.setItem('retail_vault', JSON.stringify(window.dailyVault));
     };
 
-    async function loadCloudData(uid) {
-      if (!db) return;
-      try {
-        const docRef = doc(db, "users", uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          window.inventoryQueue = data.inventory || [];
-          window.expensesList = data.expenses || [];
-          window.dailyVault = data.vault || [];
-          window.renderInventoryStock();
-          window.renderExpenses();
-          window.renderVault();
-          window.updateMetricsAndProfits();
-        }
-      } catch (err) {
-        console.warn("Failed to fetch cloud document:", err);
-      }
-    }
-
-    window.logout = async function() {
-      if (auth) {
-        try { await signOut(auth); } catch(e){}
-      }
+    window.logout = function() {
       localStorage.removeItem('retail_user_session');
       document.getElementById('main-app').style.display = 'none';
       document.getElementById('landing-screen').style.display = 'flex';
@@ -679,12 +621,13 @@
       document.getElementById('expiry-banner').style.display = 'none';
     }
 
+    // ROBUST VOICE INPUT WITH TIMEOUT & ERROR GRACE
     function startVoiceInput(inputId, isNumber = false) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const statusEl = document.getElementById('scan-status');
 
       if (!SpeechRecognition) {
-        alert("Voice speech recognition is not supported on this browser. Please use Google Chrome.");
+        alert("Voice recognition is not supported in this browser. Please use Google Chrome.");
         return;
       }
 
@@ -695,9 +638,13 @@
 
       const micBtn = document.getElementById(`mic-${inputId}`);
       if (micBtn) micBtn.classList.add('listening');
-      if (statusEl) statusEl.innerText = "🎤 Listening... Speak now.";
+      if (statusEl) statusEl.innerText = "🎤 Listening... Speak clearly into your mic.";
 
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (err) {
+        console.warn("Recognition already started", err);
+      }
 
       recognition.onresult = function(event) {
         const transcript = event.results[0][0].transcript.trim();
@@ -717,7 +664,13 @@
       };
 
       recognition.onerror = function(event) {
-        if (statusEl) statusEl.innerText = `⚠️ Voice error: ${event.error}. Please check mic permissions.`;
+        if (statusEl) {
+          if (event.error === 'no-speech') {
+            statusEl.innerText = "ℹ️ No speech detected. Click the mic icon again to retry.";
+          } else {
+            statusEl.innerText = `⚠️ Voice note: ${event.error}. Ensure microphone access is allowed.`;
+          }
+        }
         if (micBtn) micBtn.classList.remove('listening');
       };
 
@@ -737,7 +690,6 @@
         renderExpenses();
         renderVault();
         updateMetricsAndProfits();
-        if (window.saveStateToCloud) window.saveStateToCloud();
         alert("System data cleared!");
       }
     }
@@ -774,7 +726,7 @@
       document.getElementById('add-expiry').value = '';
 
       renderInventoryStock();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
     }
 
     function updateMetricsAndProfits() {
@@ -895,14 +847,14 @@
       if (!newExpiryDate) return;
       window.inventoryQueue[index].expiry = newExpiryDate;
       renderInventoryStock();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
     }
 
     function adjustStock(index, delta) {
       window.inventoryQueue[index].qty_remaining += delta;
       if (window.inventoryQueue[index].qty_remaining < 0) window.inventoryQueue[index].qty_remaining = 0;
       renderInventoryStock();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
     }
 
     function deductPOSSale() {
@@ -939,14 +891,14 @@
 
       renderVault();
       renderInventoryStock();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
       alert(`Deducted ${qtySold} units & added ZMW ${saleAmount.toFixed(2)} to revenue!`);
     }
 
     function addManualExpenseRow() {
       window.expensesList.push({ item: "General Supplier Purchase", amount: 150.00 });
       renderExpenses();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
     }
 
     function renderExpenses() {
@@ -977,13 +929,13 @@
     function updateExpenseItem(idx, field, val) {
       window.expensesList[idx][field] = field === 'amount' ? parseFloat(val) || 0 : val;
       renderExpenses();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
     }
 
     function removeExpense(idx) {
       window.expensesList.splice(idx, 1);
       renderExpenses();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
     }
 
     function addKwacha(amount) {
@@ -1013,11 +965,10 @@
       window.dailyVault.unshift(record);
       renderVault();
       updateMetricsAndProfits();
-      if (window.saveStateToCloud) window.saveStateToCloud();
+      window.saveStateToCloud();
       alert(`Ledger saved! Net Profit / Loss: ZMW ${netProfit.toFixed(2)}`);
     }
 
-    // Helper to convert uploaded file into a previewable Base64 Image URL for the vault
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1027,7 +978,6 @@
       });
     }
 
-    // 1. Supplier Receipt Upload (Saves Image + Expenses + FIFO Inventory)
     async function handleSupplierReceiptUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1080,7 +1030,7 @@
           });
           renderVault();
 
-          if (window.saveStateToCloud) window.saveStateToCloud();
+          window.saveStateToCloud();
           statusEl.innerText = `✅ Success! Parsed "${vendorName}" for ZMW ${totalAmt} & saved image to vault!`;
         } else {
           statusEl.innerText = "✅ Receipt processed by server AI!";
@@ -1090,7 +1040,6 @@
       }
     }
 
-    // 2. Z-Report Upload (Increments Revenue, Deducts corresponding inventory if matched, and saves image)
     async function handleZReportUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1116,7 +1065,6 @@
           const currentRev = parseFloat(revInput.value) || 0;
           revInput.value = (currentRev + zTotal).toFixed(2);
 
-          // Automatically deduct items from inventory queue if Z-Report items are parsed
           if (result.Items && Array.isArray(result.Items)) {
             result.Items.forEach(soldItem => {
               const match = window.inventoryQueue.find(b => b.item.toLowerCase().includes((soldItem.name || '').toLowerCase()) && b.qty_remaining > 0);
@@ -1138,7 +1086,7 @@
           });
           renderVault();
 
-          if (window.saveStateToCloud) window.saveStateToCloud();
+          window.saveStateToCloud();
           statusEl.innerText = `✅ Z-Report processed! Added ZMW ${zTotal.toFixed(2)} to revenue & saved image.`;
         } else {
           statusEl.innerText = "✅ Z-Report processed via server!";
@@ -1199,4 +1147,3 @@
   </script>
 </body>
 </html>
-EOF
