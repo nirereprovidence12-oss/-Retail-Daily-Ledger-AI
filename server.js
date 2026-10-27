@@ -51,8 +51,7 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
     }`;
 
     let response;
-    // Using valid model IDs with proper suffixes
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-2.5-flash'];
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
     
     for (const modelName of modelsToTry) {
       try {
