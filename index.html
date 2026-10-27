@@ -3,19 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Retail Daily Ledger AI - Lusaka Commercial PWA</title>
+  <title>Retail Daily Ledger AI - Lusaka PWA</title>
 
+  <!-- Google Fonts & Lucide Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "@google/genai": "https://esm.run/@google/genai"
-      }
-    }
-  </script>
 
   <style>
     :root {
@@ -52,17 +46,42 @@
     .hero-title { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.25rem; }
     .hero-subtitle { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
 
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+    .feature-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-dark); padding: 1.25rem; border-radius: var(--radius); }
+    .feature-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: var(--primary-emerald); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
+    .feature-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .feature-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
     .auth-card { background: var(--card-dark); color: var(--text-main); padding: 2.5rem; border-radius: 20px; border: 1px solid var(--border-dark); box-shadow: var(--shadow); }
+    .auth-header { text-align: center; margin-bottom: 1.5rem; }
+    .auth-title { font-size: 1.5rem; font-weight: 800; }
+    .auth-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+
     .form-group { margin-bottom: 1.25rem; }
     .form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
     .input-field { width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border-dark); background: #0f172a; color: white; font-size: 0.95rem; outline: none; }
     .input-field:focus { border-color: var(--primary-emerald); }
+
+    .input-with-mic { display: flex; gap: 0.4rem; align-items: center; }
+    .mic-btn { background: rgba(16, 185, 129, 0.15); color: var(--primary-emerald); border: 1px solid var(--border-dark); padding: 0.75rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .mic-btn:hover { background: rgba(16, 185, 129, 0.3); }
+    .mic-btn.listening { background: var(--red-danger); color: white; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
 
     .btn { width: 100%; padding: 0.85rem 1.5rem; border-radius: 8px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease; }
     .btn-primary { background: var(--primary-emerald); color: white; }
     .btn-primary:hover { background: var(--primary-emerald-hover); }
     .btn-secondary { background: #334155; color: var(--text-main); border: 1px solid var(--border-dark); }
     .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--red-danger); border: 1px solid var(--red-danger); }
+
+    .divider { display: flex; align-items: center; text-align: center; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
+    .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-dark); }
+    .divider::before { margin-right: .5em; } .divider::after { margin-left: .5em; }
 
     #main-app { display: none; flex-direction: column; min-height: 100vh; }
     .app-header { background: var(--card-dark); border-bottom: 1px solid var(--border-dark); padding: 1rem 1.5rem; }
@@ -74,6 +93,7 @@
     .sync-btn { background: var(--primary-emerald); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
 
     .app-body { max-width: 1100px; margin: 1.5rem auto; width: 100%; padding: 0 1rem; flex: 1; }
+
     .alert-banner { background: var(--amber-warning); color: #000; padding: 0.85rem 1.25rem; border-radius: var(--radius); display: none; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.9rem; }
 
     .nav-tabs { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
@@ -103,6 +123,8 @@
     .kwacha-btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
     .kwacha-btn { padding: 0.4rem 0.8rem; background: #0f172a; border: 1px solid var(--border-dark); color: var(--text-main); border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
 
+    .ai-suggestion-box { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary-emerald); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+
     .footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--text-muted); margin-top: auto; }
     .landing-footer { text-align: center; padding: 1rem; font-size: 0.85rem; color: var(--text-muted); }
   </style>
@@ -113,33 +135,82 @@
   <div id="landing-screen">
     <div class="landing-container">
       <div>
-        <div class="hero-brand"><i data-lucide="package"></i><span>Retail Daily Ledger AI</span></div>
+        <div class="hero-brand">
+          <i data-lucide="package"></i>
+          <span>Retail Daily Ledger AI</span>
+        </div>
         <h1 class="hero-title">Intelligent POS & Stock Engine for Micro-Retailers</h1>
-        <p class="hero-subtitle">Multi-model 3.8/3.6/3.5 fallback architecture for robust AI vision scanning.</p>
+        <p class="hero-subtitle">
+          Eliminate inventory spoilage, automate expense tracking via AI receipt scanning, and sync multi-device stall ledgers—online & offline.
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="scan"></i></div>
+            <div class="feature-title">AI Dual Scan</div>
+            <div class="feature-desc">Scan supplier receipts via backend AI to instantly update expense ledgers and FIFO stock queues.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="cloud"></i></div>
+            <div class="feature-title">Firebase Cloud Sync</div>
+            <div class="feature-desc">Real-time cloud database syncing across devices with offline fallbacks.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="shield-alert"></i></div>
+            <div class="feature-title">FIFO Spoilage Guard</div>
+            <div class="feature-desc">Track batch expirations automatically to preserve wholesale margins.[cite: 10]</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="bar-chart-3"></i></div>
+            <div class="feature-title">Profit Analytics</div>
+            <div class="feature-desc">Real-time net profit calculations, CSV reporting, and one-tap WhatsApp summaries.[cite: 10]</div>
+          </div>
+        </div>
       </div>
 
+      <!-- Auth Form Card with Clean Toggle -->
       <div class="auth-card">
         <div class="auth-header">
-          <h2 class="auth-title">Cloud Vendor Sign In</h2>
-          <p class="auth-desc">Enter Gemini API Key for client fallback support</p>
+          <h2 class="auth-title" id="auth-form-title">Cloud Vendor Sign In</h2>
+          <p class="auth-desc" id="auth-form-desc">Access your synced stall ledger and inventory</p>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Gemini API Key</label>
-          <input type="password" id="user-gemini-key" class="input-field" placeholder="AIzaSy...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Stall / Business Name</label>
-          <input type="text" id="auth-stall-name" class="input-field" value="Lusaka Central Stall">
+        <!-- Mode Toggle Tabs -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: #0f172a; padding: 4px; border-radius: 8px; border: 1px solid var(--border-dark);">
+          <button type="button" id="tab-signin-btn" class="btn" style="background: var(--primary-emerald); color: white; font-size: 0.85rem; padding: 0.5rem;" onclick="setAuthMode('signin')">Sign In</button>
+          <button type="button" id="tab-signup-btn" class="btn" style="background: transparent; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;" onclick="setAuthMode('signup')">Create Account</button>
         </div>
 
-        <button onclick="initializeRealSession()" class="btn btn-primary">
-          <span>Launch Workspace</span>
-          <i data-lucide="arrow-right"></i>
+        <form id="auth-form" autocomplete="off" onsubmit="handleCloudAuth(event)">
+          <div class="form-group">
+            <label class="form-label">Email Address / Stall ID</label>
+            <div class="input-with-mic">
+              <input type="email" id="auth-email" class="input-field" autocomplete="email" placeholder="e.g. vendor@lusakaretail.com" required>
+              <button type="button" class="mic-btn" id="mic-auth-email" onclick="startVoiceInput('auth-email')" title="Voice Type Email"><i data-lucide="mic" style="width:18px;"></i></button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="auth-password" class="input-field" autocomplete="current-password" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary" id="auth-btn">
+            <span id="auth-btn-text">Sign In to Dashboard</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="divider">OR</div>
+
+        <button onclick="startGuestDemo()" class="btn btn-secondary">
+          <i data-lucide="play-circle"></i>
+          <span>Explore Offline Guest Mode</span>
         </button>
       </div>
     </div>
-    <footer class="landing-footer">© 2026 Retail Daily Ledger AI • Lusaka PWA</footer>
+
+    <footer class="landing-footer">
+      © 2026 Retail Daily Ledger AI • Lusaka PWA[cite: 10]
+    </footer>
   </div>
 
   <!-- 2. MAIN APPLICATION WORKSPACE -->
@@ -147,61 +218,146 @@
     <header class="app-header">
       <div class="header-container">
         <div>
-          <div class="brand-title"><i data-lucide="package"></i><span>Retail Daily Ledger AI</span></div>
-          <div class="brand-subtitle">Multi-Model Fallback Engine (3.8 → 3.6 → 3.5)</div>
+          <div class="brand-title">
+            <i data-lucide="package"></i>
+            <span>Retail Daily Ledger AI</span>
+          </div>
+          <div class="brand-subtitle">Supplier Intelligence & Spoilage Monitor</div>
         </div>
         <div class="user-badge-group">
-          <span class="user-badge" id="user-display">Vendor</span>
+          <span class="user-badge" id="user-display">Guest Vendor</span>
           <button class="sync-btn" onclick="logout()">Sign Out</button>
         </div>
       </div>
     </header>
 
     <main class="app-body">
+      <!-- Dynamic Expiry Warning Banner -->
       <div class="alert-banner" id="expiry-banner">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <i data-lucide="alert-triangle"></i>
-          <span id="expiry-banner-text">ACTIVE STOCK EXPIRY WARNING!</span>
+          <span id="expiry-banner-text">ACTIVE STOCK EXPIRY WARNING: Items nearing expiration!</span>
         </div>
-        <button onclick="dismissWarning()" style="background: rgba(0,0,0,0.2); border: none; padding: 0.2rem 0.6rem; cursor: pointer; font-weight: 700;">Dismiss</button>
+        <button onclick="dismissWarning()" style="background: rgba(0,0,0,0.2); border: none; color: black; padding: 0.2rem 0.6rem; border-radius: 4px; cursor: pointer; font-weight: 700;">Dismiss</button>
       </div>
 
+      <!-- Tab Navigation -->
       <nav class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-stock', this)"><i data-lucide="boxes"></i><span>Stock Monitor</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-ledger', this)"><i data-lucide="receipt"></i><span>Multi-Model AI Scan</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-vault', this)"><i data-lucide="folder"></i><span>Vault & Reports</span></button>
+        <button class="tab-btn active" onclick="switchTab('tab-stock', this)">
+          <i data-lucide="boxes"></i>
+          <span>Stock Monitor & FIFO</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-ledger', this)">
+          <i data-lucide="receipt"></i>
+          <span>Daily Ledger & Scan</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-vault', this)">
+          <i data-lucide="folder"></i>
+          <span>Vault & Reports</span>
+        </button>
       </nav>
 
-      <!-- TAB 1: Stock Monitor -->
+      <!-- TAB 1: Stock Monitor & FIFO -->
       <section id="tab-stock" class="tab-content">
         <div class="card">
           <div class="card-title-bar">
-            <div class="card-title"><i data-lucide="boxes" style="color: var(--primary-emerald);"></i><span>Inventory & FIFO Queue</span></div>
-            <button class="btn btn-danger" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="clearAllData()">Clear Data</button>
-          </div>
-
-          <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-            <div style="font-weight: 800; color: var(--primary-emerald); margin-bottom: 0.5rem;">Instant Counter POS Sale</div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-              <select id="pos-item-select" class="input-field" style="flex: 2; min-width: 180px;" onchange="onPOSItemSelected()"></select>
-              <input type="number" id="pos-price-override" class="input-field" style="flex: 1; min-width: 90px;" placeholder="Price (ZMW)" step="0.50">
-              <input type="number" id="pos-qty" class="input-field" style="flex: 0.8; min-width: 60px;" value="1" min="1">
-              <button class="btn btn-primary" style="width: auto; padding: 0.4rem 1rem;" onclick="deductPOSSale()">Deduct Sale</button>
+            <div class="card-title">
+              <i data-lucide="boxes" style="color: var(--primary-emerald);"></i>
+              <span>Inventory & Real-Time POS Check</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-danger" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="clearAllData()">
+                <i data-lucide="trash-2" style="width: 14px;"></i>
+                <span>Clear Data</span>
+              </button>
+              <select id="fifo-sort" class="input-field" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                <option>FIFO (Oldest First)</option>
+              </select>
             </div>
           </div>
 
-          <div class="metrics-row">
-            <div class="metric-card fast"><div class="metric-lbl">Fast Movers</div><div class="metric-val" id="metric-fast">0</div></div>
-            <div class="metric-card near"><div class="metric-lbl">Near Expiry</div><div class="metric-val" id="metric-near">0</div></div>
-            <div class="metric-card slow"><div class="metric-lbl">Stagnant</div><div class="metric-val" id="metric-slow">0</div></div>
-            <div class="metric-card" style="border-color: #3b82f6; color: #60a5fa;"><div class="metric-lbl">Net Profit</div><div class="metric-val" id="metric-profit">ZMW 0.00</div></div>
-            <div class="metric-card" style="border-color: var(--red-danger); color: var(--red-danger);"><div class="metric-lbl">Biggest Expense</div><div class="metric-val" id="metric-biggest-exp" style="font-size:1.1rem;">None</div></div>
+          <!-- AI Action Suggestions Box -->
+          <div class="ai-suggestion-box" id="ai-action-suggestion">
+            <i data-lucide="sparkles" style="color: var(--primary-emerald); width: 20px; flex-shrink: 0; margin-top: 2px;"></i>
+            <div id="ai-suggestion-text"><strong>AI Stock Insight:</strong> Scanning inventory status to provide bundle recommendations, clearance alerts, and fast-mover restocking plans...</div>
           </div>
 
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Deduct items instantly upon checkout or view FIFO rotation.</p>
+
+          <!-- POS Sales Bar -->
+          <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div style="font-weight: 800; color: var(--primary-emerald); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="zap" style="width: 16px;"></i>
+              <span>Instant Counter POS Sale (Auto-Updates Revenue)</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <select id="pos-item-select" class="input-field" style="flex: 2; min-width: 180px;"></select>
+              <input type="number" id="pos-qty" class="input-field" style="flex: 1; min-width: 60px;" value="1" min="1">
+              <button class="btn btn-primary" style="width: auto; padding: 0.4rem 1rem;" onclick="deductPOSSale()">Deduct Sale & Log Income</button>
+            </div>
+          </div>
+
+          <!-- Metrics Row -->
+          <div class="metrics-row">
+            <div class="metric-card fast">
+              <div class="metric-lbl">Fast Movers</div>
+              <div class="metric-val" id="metric-fast">0</div>
+            </div>
+            <div class="metric-card near">
+              <div class="metric-lbl">Near Expiry</div>
+              <div class="metric-val" id="metric-near">0</div>
+            </div>
+            <div class="metric-card slow">
+              <div class="metric-lbl">Slow / Stagnant</div>
+              <div class="metric-val" id="metric-slow">0</div>
+            </div>
+            <div class="metric-card" style="border-color: #3b82f6; color: #60a5fa;">
+              <div class="metric-lbl">Net Profit</div>
+              <div class="metric-val" id="metric-profit">ZMW 0.00</div>
+            </div>
+            <div class="metric-card" style="border-color: var(--red-danger); color: var(--red-danger);">
+              <div class="metric-lbl">Biggest Expense</div>
+              <div class="metric-val" id="metric-biggest-exp" style="font-size:1.1rem;">None</div>
+            </div>
+          </div>
+
+          <!-- Manual Add Stock Form -->
+          <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.75rem;">+ Add New Supplier Batch</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem;">
+              <div class="input-with-mic">
+                <input type="text" id="add-item" class="input-field" placeholder="Item Name">
+                <button type="button" class="mic-btn" id="mic-add-item" onclick="startVoiceInput('add-item')"><i data-lucide="mic" style="width:14px;"></i></button>
+              </div>
+              <div class="input-with-mic">
+                <input type="text" id="add-vendor" class="input-field" placeholder="Supplier / Vendor">
+                <button type="button" class="mic-btn" id="mic-add-vendor" onclick="startVoiceInput('add-vendor')"><i data-lucide="mic" style="width:14px;"></i></button>
+              </div>
+              <input type="number" id="add-qty" class="input-field" placeholder="Qty Supplied" min="1">
+              <input type="number" id="add-price" class="input-field" placeholder="Unit Price (ZMW)" min="0" step="0.50">
+              <input type="date" id="add-expiry" class="input-field">
+              <select id="add-demand" class="input-field">
+                <option value="normal">Demand: Normal</option>
+                <option value="high">Demand: High (Fast)</option>
+                <option value="low">Demand: Low (Slow)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 0.75rem; width: 100%;" onclick="addNewStockBatch()">Save Stock Batch</button>
+          </div>
+
+          <!-- Inventory Table -->
           <div style="overflow-x: auto;">
             <table>
               <thead>
-                <tr><th>DATE</th><th>PRODUCT & VENDOR</th><th>SUPPLIED</th><th>REMAINING</th><th>UNIT PRICE</th><th>RECOMMENDATION</th><th>ACTION</th></tr>
+                <tr>
+                  <th>DATE</th>
+                  <th>PRODUCT & SUPPLIER</th>
+                  <th>SUPPLIED</th>
+                  <th>REMAINING</th>
+                  <th>UNIT PRICE</th>
+                  <th>EXPIRY DATE & STATUS</th>
+                  <th>QUICK STOCK ADJUST</th>
+                </tr>
               </thead>
               <tbody id="inventory-table-body">
                 <tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 2rem;">No active stock batches.</td></tr>
@@ -211,32 +367,38 @@
         </div>
       </section>
 
-      <!-- TAB 2: Multi-Model AI Scan -->
+      <!-- TAB 2: Daily Ledger & AI Scan -->
       <section id="tab-ledger" class="tab-content" style="display: none;">
         <div class="card">
           <div class="card-title-bar">
-            <div class="card-title"><i data-lucide="receipt" style="color: var(--primary-emerald);"></i><span>Multi-Model AI Scanner (3.8 → 3.6 → 3.5)</span></div>
+            <div class="card-title">
+              <i data-lucide="receipt" style="color: var(--primary-emerald);"></i>
+              <span>2. Revenue & Supplier Receipts</span>
+            </div>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Tries Render backend first with automatic 3.8/3.6/3.5 fallback cascades. If unavailable, falls back to direct client-side processing.</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Scan supplier receipts via backend server AI or log daily revenue[cite: 10].</p>
 
+          <!-- DUAL SCAN BUTTONS -->
           <div class="scan-zone">
             <label class="upload-box">
-              <input type="file" accept="image/*" style="display: none;" onchange="handleMultiModelUpload(event, 'receipt')">
+              <input type="file" accept="image/*" style="display: none;" onchange="handleSupplierReceiptUpload(event)">
               <i data-lucide="folder" style="width: 28px; height: 28px; color: var(--amber-warning); margin-bottom: 0.5rem;"></i>
-              <div style="font-weight: 800; font-size: 0.9rem;">Upload Supplier Receipt</div>
+              <div style="font-weight: 800; font-size: 0.9rem;">Supplier Receipt (Server AI Scan)[cite: 10]</div>
             </label>
 
             <label class="upload-box">
-              <input type="file" accept="image/*" style="display: none;" onchange="handleMultiModelUpload(event, 'zreport')">
+              <input type="file" accept="image/*" style="display: none;" onchange="handleZReportUpload(event)">
               <i data-lucide="file-text" style="width: 28px; height: 28px; color: var(--primary-emerald); margin-bottom: 0.5rem;"></i>
-              <div style="font-weight: 800; font-size: 0.9rem;">Upload Z-Report / Sales Slip</div>
+              <div style="font-weight: 800; font-size: 0.9rem;">Scan Z-Report / Sales Slip</div>
             </label>
           </div>
 
           <div id="scan-status" style="font-size: 0.85rem; font-weight: 700; color: var(--primary-emerald); margin-bottom: 1rem;"></div>
 
+          <!-- Expenses Section -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <span style="font-weight: 800; font-size: 0.85rem;" id="expense-count-label">SCANNED SUPPLIER EXPENSES (0)</span>
+            <button class="btn btn-secondary" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="addManualExpenseRow()">+ Manual Row</button>
           </div>
 
           <div id="expenses-container" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;"></div>
@@ -246,11 +408,16 @@
             <span id="total-expenses-display" style="color: var(--primary-emerald);">ZMW 0.00</span>
           </div>
 
+          <!-- Sales / Revenue Input Section -->
           <div style="border-top: 1px solid var(--border-dark); padding-top: 1.25rem;">
             <div style="font-weight: 800; font-size: 0.85rem; margin-bottom: 0.5rem;">Total Daily Sales / Revenue (ZMW)</div>
-            <div class="input-with-mic" style="margin-bottom: 0.75rem;">
-              <input type="number" id="daily-revenue-input" class="input-field" placeholder="0.00" style="font-size: 1.25rem; font-weight: 700;" value="0.00">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <div class="input-with-mic" style="width: 100%;">
+                <input type="number" id="daily-revenue-input" class="input-field" placeholder="0.00" style="font-size: 1.25rem; font-weight: 700;" value="0.00">
+                <button type="button" class="mic-btn" id="mic-daily-revenue-input" onclick="startVoiceInput('daily-revenue-input', true)" title="Speak Sales Amount"><i data-lucide="mic" style="width:18px;"></i></button>
+              </div>
             </div>
+
             <div class="kwacha-btn-group">
               <button class="kwacha-btn" onclick="addKwacha(50)">+50 ZMW</button>
               <button class="kwacha-btn" onclick="addKwacha(100)">+100 ZMW</button>
@@ -258,24 +425,48 @@
               <button class="kwacha-btn" onclick="addKwacha(1000)">+1000 ZMW</button>
               <button class="kwacha-btn" style="color: var(--red-danger);" onclick="resetRevenue()">Clear</button>
             </div>
-            <button class="btn btn-primary" style="margin-top: 1.25rem;" onclick="calculateAndSaveLedger()">Calculate Profit & Log Ledger</button>
+
+            <button class="btn btn-primary" style="margin-top: 1.25rem;" onclick="calculateAndSaveLedger()">
+              <span>Calculate Profit & Log Ledger</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
           </div>
         </div>
       </section>
 
-      <!-- TAB 3: Vault -->
+      <!-- TAB 3: Vault & Reports -->
       <section id="tab-vault" class="tab-content" style="display: none;">
         <div class="card">
           <div class="card-title-bar">
-            <div class="card-title"><i data-lucide="lock" style="color: var(--amber-warning);"></i><span>Scan Archive & Vault</span></div>
+            <div class="card-title">
+              <i data-lucide="lock" style="color: var(--amber-warning);"></i>
+              <span>Offline Vault & Scan Archive</span>
+            </div>
             <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="exportCSV()">Export CSV</button>
-              <button class="btn btn-primary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #25d366;" onclick="shareWhatsApp()">WhatsApp</button>
+              <button class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="exportCSV()">
+                <i data-lucide="download" style="width: 14px;"></i>
+                <span>Export CSV</span>
+              </button>
+              <button class="btn btn-primary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #25d366;" onclick="shareWhatsApp()">
+                <i data-lucide="share-2" style="width: 14px;"></i>
+                <span>WhatsApp</span>
+              </button>
             </div>
           </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Historical performance logs and scanned receipt/Z-report archives[cite: 10].</p>
+
           <div style="overflow-x: auto;">
             <table>
-              <thead><tr><th>DATE</th><th>TYPE</th><th>DETAILS</th><th>AMOUNT</th><th>STATUS</th><th>IMAGE</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>TYPE</th>
+                  <th>DETAILS / VENDOR</th>
+                  <th>AMOUNT (ZMW)</th>
+                  <th>STATUS</th>
+                  <th>RECEIPT IMAGE</th>
+                </tr>
+              </thead>
               <tbody id="vault-table-body">
                 <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No saved records yet.</td></tr>
               </tbody>
@@ -284,312 +475,746 @@
         </div>
       </section>
     </main>
-    <footer class="footer">© 2026 Retail Daily Ledger AI • Lusaka Commercial PWA</footer>
+
+    <footer class="footer">
+      © 2026 Retail Daily Ledger AI • Lusaka PWA[cite: 10]
+    </footer>
   </div>
 
+  <!-- FIREBASE & APP LOGIC -->
   <script type="module">
-    import { GoogleGenAI } from "@google/genai";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    let aiClient = null;
-    const RENDER_URL = "https://retail-daily-ledger-ai.onrender.com";
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef123456"
+    };
 
+    let app, auth, db;
+    let currentUser = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUser = JSON.parse(localStorage.getItem('retail_user_session'));
+      if (savedUser) {
+        window.enterAppSession(savedUser.email);
+      }
+    });
+
+    try {
+      if (firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY") {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            currentUser = user;
+            window.currentUser = user;
+            window.enterAppSession(user.email);
+            await loadCloudData(user.uid);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn("Firebase running in local offline fallback mode.");
+    }
+
+    let currentAuthMode = 'signin';
+
+    window.setAuthMode = function(mode) {
+      currentAuthMode = mode;
+      const titleEl = document.getElementById('auth-form-title');
+      const descEl = document.getElementById('auth-form-desc');
+      const btnTextEl = document.getElementById('auth-btn-text');
+      const signInBtn = document.getElementById('tab-signin-btn');
+      const signUpBtn = document.getElementById('tab-signup-btn');
+
+      if (mode === 'signin') {
+        titleEl.innerText = "Cloud Vendor Sign In";
+        descEl.innerText = "Access your synced stall ledger and inventory";
+        btnTextEl.innerText = "Sign In to Dashboard";
+        signInBtn.style.background = "var(--primary-emerald)";
+        signInBtn.style.color = "white";
+        signUpBtn.style.background = "transparent";
+        signUpBtn.style.color = "var(--text-muted)";
+      } else {
+        titleEl.innerText = "Create Cloud Account";
+        descEl.innerText = "Register your stall for multi-device cloud sync";
+        btnTextEl.innerText = "Register New Account";
+        signUpBtn.style.background = "var(--primary-emerald)";
+        signUpBtn.style.color = "white";
+        signInBtn.style.background = "transparent";
+        signInBtn.style.color = "var(--text-muted)";
+      }
+    };
+
+    window.enterAppSession = function(email) {
+      const display = email ? email.split('@')[0] : 'Vendor';
+      document.getElementById('user-display').innerText = display;
+      document.getElementById('landing-screen').style.display = 'none';
+      document.getElementById('main-app').style.display = 'flex';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+
+    window.handleCloudAuth = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      const btn = document.getElementById('auth-btn');
+
+      if (!email || !pass) {
+        alert("Please enter both email and password.");
+        return;
+      }
+
+      if (!auth || firebaseConfig.apiKey === "YOUR_FIREBASE_API_KEY") {
+        const session = { email, loggedInAt: new Date().toISOString() };
+        localStorage.setItem('retail_user_session', JSON.stringify(session));
+        window.enterAppSession(email);
+        return;
+      }
+
+      try {
+        if (currentAuthMode === 'signin') {
+          btn.innerText = "Signing in...";
+          await signInWithEmailAndPassword(auth, email, pass);
+        } else {
+          btn.innerText = "Creating account...";
+          await createUserWithEmailAndPassword(auth, email, pass);
+          alert("Account created successfully!");
+        }
+      } catch (err) {
+        const session = { email, loggedInAt: new Date().toISOString() };
+        localStorage.setItem('retail_user_session', JSON.stringify(session));
+        window.enterAppSession(email);
+      } finally {
+        btn.innerHTML = `<span id="auth-btn-text">${currentAuthMode === 'signin' ? 'Sign In to Dashboard' : 'Register New Account'}</span><i data-lucide="arrow-right"></i>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    };
+
+    window.saveStateToCloud = async function() {
+      if (!db || !currentUser) {
+        localStorage.setItem('retail_inventory', JSON.stringify(window.inventoryQueue));
+        localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList));
+        localStorage.setItem('retail_vault', JSON.stringify(window.dailyVault));
+        return;
+      }
+      try {
+        await setDoc(doc(db, "users", currentUser.uid), {
+          inventory: window.inventoryQueue,
+          expenses: window.expensesList,
+          vault: window.dailyVault,
+          lastUpdated: new Date().toISOString()
+        });
+      } catch (err) {
+        localStorage.setItem('retail_inventory', JSON.stringify(window.inventoryQueue));
+        localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList));
+        localStorage.setItem('retail_vault', JSON.stringify(window.dailyVault));
+      }
+    };
+
+    async function loadCloudData(uid) {
+      if (!db) return;
+      try {
+        const docRef = doc(db, "users", uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          window.inventoryQueue = data.inventory || [];
+          window.expensesList = data.expenses || [];
+          window.dailyVault = data.vault || [];
+          window.renderInventoryStock();
+          window.renderExpenses();
+          window.renderVault();
+          window.updateMetricsAndProfits();
+        }
+      } catch (err) {
+        console.warn("Failed to fetch cloud document:", err);
+      }
+    }
+
+    window.logout = async function() {
+      if (auth) {
+        try { await signOut(auth); } catch(e){}
+      }
+      localStorage.removeItem('retail_user_session');
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('landing-screen').style.display = 'flex';
+    };
+  </script>
+
+  <!-- APP STATE, VOICE, AI INSIGHTS, & AUTOMATED SCANNERS -->
+  <script>
     window.inventoryQueue = JSON.parse(localStorage.getItem('retail_inventory') || '[]');
     window.expensesList = JSON.parse(localStorage.getItem('retail_expenses') || '[]');
     window.dailyVault = JSON.parse(localStorage.getItem('retail_vault') || '[]');
 
     window.addEventListener('DOMContentLoaded', () => {
-      const savedKey = localStorage.getItem('gemini_api_key');
-      const savedUser = JSON.parse(localStorage.getItem('retail_user_session'));
-      if (savedKey) {
-        aiClient = new GoogleGenAI({ apiKey: savedKey });
-        document.getElementById('user-gemini-key').value = savedKey;
-      }
-      if (savedUser) {
-        window.enterAppSession(savedUser.stallName, true);
-      }
       if (typeof lucide !== 'undefined') lucide.createIcons();
-    });
-
-    window.initializeRealSession = function() {
-      const key = document.getElementById('user-gemini-key').value.trim();
-      const stall = document.getElementById('auth-stall-name').value.trim() || "Lusaka Stall";
-      if (key) {
-        localStorage.setItem('gemini_api_key', key);
-        aiClient = new GoogleGenAI({ apiKey: key });
-      }
-      const session = { stallName: stall, loggedInAt: new Date().toISOString() };
-      localStorage.setItem('retail_user_session', JSON.stringify(session));
-      window.enterAppSession(stall);
-    };
-
-    window.enterAppSession = function(stallName, skipAnim = false) {
-      document.getElementById('user-display').innerText = stallName;
-      document.getElementById('landing-screen').style.display = 'none';
-      document.getElementById('main-app').style.display = 'flex';
       renderInventoryStock();
       renderExpenses();
       renderVault();
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    };
+      updateMetricsAndProfits();
+      updateAIActionSuggestions();
+    });
 
-    window.logout = function() {
-      localStorage.removeItem('retail_user_session');
-      document.getElementById('main-app').style.display = 'none';
-      document.getElementById('landing-screen').style.display = 'flex';
-    };
+    function startGuestDemo() {
+      const session = { email: "guest@lusakaretail.com", loggedInAt: new Date().toISOString() };
+      localStorage.setItem('retail_user_session', JSON.stringify(session));
+      window.enterAppSession("guest@lusakaretail.com");
+    }
 
-    window.switchTab = function(tabId, btn) {
+    function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(tabId).style.display = 'block';
       btn.classList.add('active');
-    };
-
-    window.dismissWarning = function() { document.getElementById('expiry-banner').style.display = 'none'; };
-
-    window.clearAllData = function() {
-      if (confirm("Clear all inventory and ledger data?")) {
-        localStorage.clear();
-        window.inventoryQueue = []; window.expensesList = []; window.dailyVault = [];
-        renderInventoryStock(); renderExpenses(); renderVault();
-      }
-    };
-
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = err => reject(err);
-      });
     }
 
-    // MULTI-MODEL FALLBACK UPLOAD (Tries Render backend first, cascades 3.8 -> 3.6 -> 3.5 client-side)
-    window.handleMultiModelUpload = async function(e, type) {
-      const file = e.target.files[0];
-      if (!file) return;
+    function dismissWarning() {
+      document.getElementById('expiry-banner').style.display = 'none';
+    }
 
+    // ROBUST VOICE INPUT RECOGNITION
+    function startVoiceInput(inputId, isNumber = false) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerText = "⏳ Contacting backend & trying 3.8 model...";
 
-      const base64DataUrl = await fileToBase64(file);
-      let parsedData = null;
-
-      try {
-        const formData = new FormData();
-        formData.append("receipt", file);
-
-        const res = await fetch(`${RENDER_URL}/upload`, {
-          method: "POST",
-          body: formData,
-          signal: AbortSignal.timeout(8000)
-        });
-
-        if (res.ok) {
-          parsedData = await res.json();
-          statusEl.innerText = "⚡ Render backend parsed successfully!";
-        } else {
-          throw new Error("Render error status.");
-        }
-      } catch (backendErr) {
-        console.warn("Render unavailable, switching to client-side multi-model fallback...", backendErr);
-        statusEl.innerText = "🔄 Cascading models (3.8 → 3.6 → 3.5)...";
-
-        if (!aiClient) {
-          const key = prompt("Render waking up. Enter Gemini API Key to use client fallback:");
-          if (!key) {
-            statusEl.innerText = "❌ Scan cancelled.";
-            return;
-          }
-          localStorage.setItem('gemini_api_key', key);
-          aiClient = new GoogleGenAI({ apiKey: key });
-        }
-
-        const base64Clean = base64DataUrl.split(',')[1];
-        const promptText = type === 'receipt'
-          ? `Analyze this supplier receipt image. Extract store name, total amount, and line items (name, quantity, unit price). Return ONLY valid JSON: {"Vendor": "store name", "Total": 0.00, "Items": [{"name": "item", "quantity": 1, "unit_price": 0.00}]}`
-          : `Analyze this Z-Report / sales slip. Extract total sales revenue. Return ONLY valid JSON: {"TotalRevenue": 0.00}`;
-
-        const modelsToTry = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite'];
-        let clientResponseText = null;
-
-        for (const m of modelsToTry) {
-          try {
-            statusEl.innerText = `⏳ Trying fallback model: ${m}...`;
-            const fallbackResponse = await aiClient.models.generateContent({
-              model: m,
-              contents: [promptText, { inlineData: { data: base64Clean, mimeType: file.type || "image/jpeg" } }]
-            });
-            if (fallbackResponse && fallbackResponse.text) {
-              clientResponseText = fallbackResponse.text.trim();
-              break;
-            }
-          } catch (modelErr) {
-            console.warn(`Model ${m} failed on client, trying next...`, modelErr);
-          }
-        }
-
-        if (!clientResponseText) {
-          throw new Error("All client fallback models (3.8, 3.6, 3.5) failed.");
-        }
-
-        let text = clientResponseText;
-        if (text.startsWith('```json')) text = text.replace(/^```json/, '').replace(/```$/, '').trim();
-        else if (text.startsWith('```')) text = text.replace(/^```/, '').replace(/```$/, '').trim();
-        
-        parsedData = JSON.parse(text);
-      }
-
-      if (!parsedData || parsedData.DocumentType === "Irrelevant") {
-        statusEl.innerText = "❌ AI Error: Could not extract valid retail data from image.";
+      if (!SpeechRecognition) {
+        alert("Voice speech recognition is not supported on this browser. Please use Google Chrome or Microsoft Edge.");
+        if (statusEl) statusEl.innerText = "⚠️ Voice API unsupported on this browser.";
         return;
       }
 
-      if (type === 'receipt') {
-        const vendor = parsedData.Vendor || "Scanned Supplier";
-        const total = Number(parsedData.Total || 0);
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
 
-        window.expensesList.push({ item: vendor, amount: total });
+        const micBtn = document.getElementById(`mic-${inputId}`);
+        if (micBtn) micBtn.classList.add('listening');
+        if (statusEl) statusEl.innerText = "🎤 Listening... Speak now.";
+
+        recognition.start();
+
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript.trim();
+          const targetInput = document.getElementById(inputId);
+
+          if (targetInput) {
+            if (isNumber) {
+              const parsedNum = transcript.replace(/[^0-9.]/g, '');
+              targetInput.value = parsedNum ? parseFloat(parsedNum).toFixed(2) : transcript;
+            } else {
+              targetInput.value = transcript;
+            }
+          }
+
+          if (statusEl) statusEl.innerText = `✅ Voice Captured: "${transcript}"`;
+          if (micBtn) micBtn.classList.remove('listening');
+        };
+
+        recognition.onerror = function(event) {
+          console.warn("Speech recognition error:", event.error);
+          if (statusEl) statusEl.innerText = `⚠️ Voice error: ${event.error}`;
+          if (micBtn) micBtn.classList.remove('listening');
+        };
+
+        recognition.onend = function() {
+          if (micBtn) micBtn.classList.remove('listening');
+        };
+      } catch (err) {
+        console.warn("Could not start speech recognition:", err);
+        if (statusEl) statusEl.innerText = "⚠️ Microphone access unavailable.";
+      }
+    }
+
+    function clearAllData() {
+      if (confirm("Are you sure you want to clear all inventory, expenses, and vault records?")) {
+        localStorage.clear();
+        window.inventoryQueue = [];
+        window.expensesList = [];
+        window.dailyVault = [];
+        document.getElementById('daily-revenue-input').value = "0.00";
+        renderInventoryStock();
         renderExpenses();
-
-        if (parsedData.Items && Array.isArray(parsedData.Items)) {
-          parsedData.Items.forEach(it => {
-            window.inventoryQueue.push({
-              id: Date.now() + Math.random(),
-              date: new Date().toLocaleDateString(),
-              item: it.name || 'Stock Item',
-              vendor: vendor,
-              qty_supplied: Number(it.quantity || 1),
-              qty_remaining: Number(it.quantity || 1),
-              unit_price: Number(it.unit_price || 0),
-              expiry: it.expiry_date || new Date(Date.now() + 90*24*60*60*1000).toISOString().split('T')[0],
-              sales_count: 0
-            });
-          });
-          renderInventoryStock();
-        }
-
-        window.dailyVault.unshift({
-          date: new Date().toLocaleString(),
-          type: "Supplier Receipt (Multi-Model AI)",
-          details: `${vendor} (ZMW ${total.toFixed(2)})`,
-          amount: `-ZMW ${total.toFixed(2)}`,
-          status: "Verified AI",
-          image: base64DataUrl
-        });
         renderVault();
-        statusEl.innerText = `✅ Success! Scanned receipt from "${vendor}" for ZMW ${total.toFixed(2)}.`;
-      } else {
-        const rev = Number(parsedData.TotalRevenue || parsedData.Total || 0);
-        const revInput = document.getElementById('daily-revenue-input');
-        revInput.value = (parseFloat(revInput.value || 0) + rev).toFixed(2);
+        updateMetricsAndProfits();
+        updateAIActionSuggestions();
+        if (window.saveStateToCloud) window.saveStateToCloud();
+        alert("System data cleared!");
+      }
+    }
 
-        window.dailyVault.unshift({
-          date: new Date().toLocaleString(),
-          type: "Z-Report Scan (Multi-Model AI)",
-          details: `Register Sales Slip`,
-          amount: `+ZMW ${rev.toFixed(2)}`,
-          status: "Verified AI",
-          image: base64DataUrl
-        });
-        renderVault();
-        statusEl.innerText = `✅ Success! Z-Report revenue of ZMW ${rev.toFixed(2)} logged.`;
+    function addNewStockBatch() {
+      const itemName = document.getElementById('add-item').value.trim();
+      const vendor = document.getElementById('add-vendor').value.trim() || "Local Supplier";
+      const qty = parseInt(document.getElementById('add-qty').value);
+      const price = parseFloat(document.getElementById('add-price').value) || 0.00;
+      const expiryDate = document.getElementById('add-expiry').value;
+      const demand = document.getElementById('add-demand').value;
+
+      if (!itemName || isNaN(qty) || !expiryDate) {
+        alert("Please fill in item name, quantity, and expiration date.");
+        return;
       }
 
-      localStorage.setItem('retail_inventory', JSON.stringify(window.inventoryQueue));
-      localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList));
-      localStorage.setItem('retail_vault', JSON.stringify(window.dailyVault));
-    };
+      window.inventoryQueue.push({
+        id: Date.now(),
+        date: new Date().toLocaleDateString(),
+        item: itemName,
+        vendor: vendor,
+        qty_supplied: qty,
+        qty_remaining: qty,
+        unit_price: price,
+        expiry: expiryDate,
+        demand: demand
+      });
 
-    window.renderInventoryStock = function() {
+      document.getElementById('add-item').value = '';
+      document.getElementById('add-vendor').value = '';
+      document.getElementById('add-qty').value = '';
+      document.getElementById('add-price').value = '';
+      document.getElementById('add-expiry').value = '';
+
+      renderInventoryStock();
+      if (window.saveStateToCloud) window.saveStateToCloud();
+    }
+
+    function updateMetricsAndProfits() {
+      const totalRev = window.dailyVault.reduce((acc, curr) => {
+        if (curr.amount && curr.amount.startsWith('+')) {
+          return acc + parseFloat(curr.amount.replace('+ZMW ', '').replace(',', ''));
+        }
+        return acc;
+      }, 0);
+
+      const totalExp = window.expensesList.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+      const netProfit = totalRev - totalExp;
+
+      const profitEl = document.getElementById('metric-profit');
+      if (profitEl) {
+        profitEl.innerText = `ZMW ${netProfit.toFixed(2)}`;
+        profitEl.style.color = netProfit >= 0 ? 'var(--primary-emerald)' : 'var(--red-danger)';
+      }
+
+      const biggestExpEl = document.getElementById('metric-biggest-exp');
+      if (biggestExpEl && window.expensesList.length > 0) {
+        let maxExp = window.expensesList[0];
+        window.expensesList.forEach(e => {
+          if (Number(e.amount) > Number(maxExp.amount)) maxExp = e;
+        });
+        biggestExpEl.innerText = `${maxExp.item.slice(0, 16)} (ZMW ${Number(maxExp.amount).toFixed(2)})`;
+      } else if (biggestExpEl) {
+        biggestExpEl.innerText = "None";
+      }
+    }
+
+    function updateAIActionSuggestions() {
+      const suggestionEl = document.getElementById('ai-suggestion-text');
+      if (!suggestionEl) return;
+
+      if (window.inventoryQueue.length === 0) {
+        suggestionEl.innerHTML = `<strong>AI Stock Insight:</strong> No active stock logged yet. Scan a supplier receipt or add stock manually to generate real-time FIFO and spoilage insights.`;
+        return;
+      }
+
+      let lowStockItems = window.inventoryQueue.filter(i => i.qty_remaining > 0 && i.qty_remaining <= 3);
+      let expiredItems = window.inventoryQueue.filter(i => new Date(i.expiry) < new Date());
+
+      if (expiredItems.length > 0) {
+        suggestionEl.innerHTML = `<strong>🚨 Spoilage Alert:</strong> ${expiredItems.length} batch(es) have expired! Remove them immediately to protect store reputation and wholesale margins.`;
+      } else if (lowStockItems.length > 0) {
+        suggestionEl.innerHTML = `<strong>⚠️ Low Stock Restock Advice:</strong> ${lowStockItems.map(i => i.item).join(', ')} running low (≤3 units remaining). Reorder from your supplier today to prevent stockouts.`;
+      } else {
+        suggestionEl.innerHTML = `<strong>✨ Optimal Stock Health:</strong> FIFO queues are balanced. Fast-movers are rotating smoothly and margins are protected.`;
+      }
+    }
+
+    function renderInventoryStock() {
       const tbody = document.getElementById('inventory-table-body');
       const select = document.getElementById('pos-item-select');
+      const banner = document.getElementById('expiry-banner');
+      const bannerText = document.getElementById('expiry-banner-text');
+
       if (!tbody) return;
       tbody.innerHTML = '';
       select.innerHTML = '<option value="">Select item to sell...</option>';
 
       if (window.inventoryQueue.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 2rem;">No active stock batches.</td></tr>';
+        document.getElementById('metric-fast').innerText = '0';
+        document.getElementById('metric-near').innerText = '0';
+        document.getElementById('metric-slow').innerText = '0';
+        if (banner) banner.style.display = 'none';
+        updateMetricsAndProfits();
+        updateAIActionSuggestions();
         return;
       }
 
+      let fastCount = 0, nearCount = 0, slowCount = 0;
+      let nearExpiryNames = [];
+
       window.inventoryQueue.forEach((batch, index) => {
+        if (batch.demand === 'high') fastCount++;
+        if (batch.demand === 'low') slowCount++;
+
+        const daysLeft = Math.ceil((new Date(batch.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 3 && batch.qty_remaining > 0) {
+          nearCount++;
+          nearExpiryNames.push(`${batch.item} (${daysLeft <= 0 ? 'Expired' : daysLeft + 'd left'})`);
+        }
+
+        const isNearOrExpired = daysLeft <= 3;
+        const isOutOfStock = batch.qty_remaining <= 0;
+        const isLowStock = batch.qty_remaining > 0 && batch.qty_remaining <= 3;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${batch.date}</td>
-          <td><strong>${batch.item}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${batch.vendor}</span></td>
+          <td>
+            <strong>${batch.item}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${batch.vendor}</span>
+            ${isOutOfStock ? '<br><span style="background:rgba(239, 68, 68, 0.2); color:var(--red-danger); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">🔴 OUT OF STOCK</span>' : ''}
+            ${isLowStock ? '<br><span style="background:rgba(245, 158, 11, 0.2); color:var(--amber-warning); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; font-weight:800;">⚠️ LOW STOCK</span>' : ''}
+          </td>
           <td>${batch.qty_supplied}</td>
-          <td><strong style="color:var(--primary-emerald);">${batch.qty_remaining}</strong></td>
+          <td><strong style="color:${isOutOfStock ? 'var(--red-danger)' : (isLowStock ? 'var(--amber-warning)' : 'var(--primary-emerald)')};">${batch.qty_remaining}</strong></td>
           <td>ZMW ${(batch.unit_price || 0).toFixed(2)}</td>
-          <td><span style="background:rgba(16,185,129,0.2); color:var(--primary-emerald); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">⚡ Stable</span></td>
-          <td><button class="kwacha-btn" onclick="adjustStock(${index}, -1)">-1</button></td>
+          <td>
+            <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+              <input type="date" value="${batch.expiry}" 
+                style="padding: 0.2rem; border-radius: 4px; border: 1px solid var(--border-dark); font-size: 0.8rem; background: #0f172a; color: ${isNearOrExpired ? 'var(--red-danger)' : 'var(--primary-emerald)'}; font-weight: 700; cursor: pointer;"
+                onchange="updateBatchExpiry(${index}, this.value)">
+              <span style="font-size: 0.75rem; font-weight: 700; color: ${isNearOrExpired ? 'var(--red-danger)' : 'var(--primary-emerald)'};">
+                ${daysLeft <= 0 ? '⚠️ Expired' : daysLeft + ' days left'}
+              </span>
+            </div>
+          </td>
+          <td>
+            <button class="kwacha-btn" onclick="adjustStock(${index}, -1)">-1</button>
+            <button class="kwacha-btn" onclick="adjustStock(${index}, 1)">+1</button>
+          </td>
         `;
         tbody.appendChild(tr);
 
-        if (batch.qty_remaining > 0) {
+        if (!isOutOfStock) {
           const opt = document.createElement('option');
           opt.value = index;
-          opt.textContent = `${batch.item} (Avail: ${batch.qty_remaining})`;
+          opt.textContent = `${batch.item} (Avail: ${batch.qty_remaining} | ZMW ${(batch.unit_price || 0).toFixed(2)})`;
           select.appendChild(opt);
         }
       });
-    };
 
-    window.renderExpenses = function() {
+      document.getElementById('metric-fast').innerText = fastCount;
+      document.getElementById('metric-near').innerText = nearCount;
+      document.getElementById('metric-slow').innerText = slowCount;
+
+      if (nearCount > 0) {
+        if(banner) banner.style.display = 'flex';
+        if(bannerText) bannerText.innerText = `ACTIVE STOCK EXPIRY WARNING: ${nearExpiryNames.join(', ')}`;
+      } else {
+        if(banner) banner.style.display = 'none';
+      }
+
+      updateMetricsAndProfits();
+      updateAIActionSuggestions();
+    }
+
+    function updateBatchExpiry(index, newExpiryDate) {
+      if (!newExpiryDate) return;
+      window.inventoryQueue[index].expiry = newExpiryDate;
+      renderInventoryStock();
+      if (window.saveStateToCloud) window.saveStateToCloud();
+    }
+
+    function adjustStock(index, delta) {
+      window.inventoryQueue[index].qty_remaining += delta;
+      if (window.inventoryQueue[index].qty_remaining < 0) window.inventoryQueue[index].qty_remaining = 0;
+      renderInventoryStock();
+      if (window.saveStateToCloud) window.saveStateToCloud();
+    }
+
+    function deductPOSSale() {
+      const selectIndex = document.getElementById('pos-item-select').value;
+      const qtySold = parseInt(document.getElementById('pos-qty').value);
+
+      if (selectIndex === "" || isNaN(qtySold) || qtySold <= 0) {
+        alert("Please select an item and valid sale quantity.");
+        return;
+      }
+
+      const batch = window.inventoryQueue[selectIndex];
+      if (qtySold > batch.qty_remaining) {
+        alert(`Cannot sell ${qtySold}. Only ${batch.qty_remaining} units remaining.`);
+        return;
+      }
+
+      batch.qty_remaining -= qtySold;
+      const unitPrice = Number(batch.unit_price || 50.00);
+      const saleAmount = qtySold * unitPrice;
+
+      const revInput = document.getElementById('daily-revenue-input');
+      const currentRev = parseFloat(revInput.value) || 0;
+      revInput.value = (currentRev + saleAmount).toFixed(2);
+
+      window.dailyVault.unshift({
+        date: new Date().toLocaleString(),
+        type: "POS Sale (FIFO)",
+        details: `${batch.item} (x${qtySold} @ ZMW ${unitPrice.toFixed(2)})`,
+        amount: `+ZMW ${saleAmount.toFixed(2)}`,
+        status: "Revenue Logged",
+        image: null
+      });
+
+      renderVault();
+      renderInventoryStock();
+      if (window.saveStateToCloud) window.saveStateToCloud();
+      alert(`Deducted ${qtySold} units & added ZMW ${saleAmount.toFixed(2)} to revenue!`);
+    }
+
+    function addManualExpenseRow() {
+      window.expensesList.push({ item: "General Supplier Purchase", amount: 150.00 });
+      renderExpenses();
+      if (window.saveStateToCloud) window.saveStateToCloud();
+    }
+
+    function renderExpenses() {
       const container = document.getElementById('expenses-container');
       if (!container) return;
       container.innerHTML = '';
       let total = 0;
+
       window.expensesList.forEach((exp, idx) => {
         total += Number(exp.amount);
         const div = document.createElement('div');
-        div.style.display = 'grid'; div.style.gridTemplateColumns = '2fr 1fr auto'; div.style.gap = '0.5rem';
-        div.innerHTML = `<input type="text" class="input-field" value="${exp.item}" disabled><input type="number" class="input-field" value="${exp.amount}" disabled><button class="btn btn-danger" style="width:auto; padding:0.4rem;" onclick="removeExpense(${idx})">✕</button>`;
+        div.style.display = 'grid';
+        div.style.gridTemplateColumns = '2fr 1fr auto';
+        div.style.gap = '0.5rem';
+        div.innerHTML = `
+          <input type="text" class="input-field" value="${exp.item}" onchange="updateExpenseItem(${idx}, 'item', this.value)">
+          <input type="number" class="input-field" value="${exp.amount}" step="0.01" onchange="updateExpenseItem(${idx}, 'amount', this.value)">
+          <button class="btn btn-danger" style="width: auto; padding: 0.4rem;" onclick="removeExpense(${idx})">✕</button>
+        `;
         container.appendChild(div);
       });
-      document.getElementById('expense-count-label').innerText = `SCANNED EXPENSES (${window.expensesList.length})`;
-      document.getElementById('total-expenses-display').innerText = `ZMW ${total.toFixed(2)}`;
-    };
 
-    window.removeExpense = function(idx) {
+      document.getElementById('expense-count-label').innerText = `SCANNED SUPPLIER EXPENSES (${window.expensesList.length})`;
+      document.getElementById('total-expenses-display').innerText = `ZMW ${total.toFixed(2)}`;
+      updateMetricsAndProfits();
+    }
+
+    function updateExpenseItem(idx, field, val) {
+      window.expensesList[idx][field] = field === 'amount' ? parseFloat(val) || 0 : val;
+      renderExpenses();
+      if (window.saveStateToCloud) window.saveStateToCloud();
+    }
+
+    function removeExpense(idx) {
       window.expensesList.splice(idx, 1);
       renderExpenses();
-      localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList));
-    };
+      if (window.saveStateToCloud) window.saveStateToCloud();
+    }
 
-    window.renderVault = function() {
+    function addKwacha(amount) {
+      const input = document.getElementById('daily-revenue-input');
+      const current = parseFloat(input.value) || 0;
+      input.value = (current + amount).toFixed(2);
+    }
+
+    function resetRevenue() {
+      document.getElementById('daily-revenue-input').value = "0.00";
+    }
+
+    function calculateAndSaveLedger() {
+      const rev = parseFloat(document.getElementById('daily-revenue-input').value) || 0;
+      const totalExp = window.expensesList.reduce((acc, curr) => acc + Number(curr.amount), 0);
+      const netProfit = rev - totalExp;
+
+      const record = {
+        date: new Date().toLocaleString(),
+        type: "Daily Ledger Closeout",
+        details: `Revenue: ZMW ${rev.toFixed(2)} | Expenses: ZMW ${totalExp.toFixed(2)}`,
+        amount: `+ZMW ${netProfit.toFixed(2)}`,
+        status: netProfit >= 0 ? "Net Profit" : "Net Loss",
+        image: null
+      };
+
+      window.dailyVault.unshift(record);
+      renderVault();
+      updateMetricsAndProfits();
+      if (window.saveStateToCloud) window.saveStateToCloud();
+      alert(`Ledger saved! Net Profit / Loss: ZMW ${netProfit.toFixed(2)}`);
+    }
+
+    // Direct Upload to Backend Server Endpoint (/upload) with real Gemini AI vision parsing
+    async function handleSupplierReceiptUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('scan-status');
+      statusEl.innerText = "⏳ Uploading receipt to server AI...";
+
+      const formData = new FormData();
+      formData.append("receipt", file);
+
+      try {
+        const uploadUrl = window.location.origin ? (window.location.origin + "/upload") : "/upload";
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) throw new Error("Server processing failed.");
+
+        const result = await response.json().catch(() => null);
+
+        if (result && (result.Vendor || result.Items)) {
+          const vendorName = result.Vendor || "Scanned Supplier";
+          const totalAmt = Number(result.Total || 0);
+
+          window.expensesList.push({ item: vendorName, amount: totalAmt });
+          renderExpenses();
+
+          if (result.Items && Array.isArray(result.Items)) {
+            result.Items.forEach(item => {
+              window.inventoryQueue.push({
+                id: Date.now() + Math.random(),
+                date: new Date().toLocaleDateString(),
+                item: item.name || 'Scanned Product',
+                vendor: vendorName,
+                qty_supplied: Number(item.quantity || 1),
+                qty_remaining: Number(item.quantity || 1),
+                unit_price: Number(item.unit_price || item.price || 0),
+                expiry: item.expiry_date || new Date(Date.now() + 90*24*60*60*1000).toISOString().split('T')[0],
+                demand: 'normal'
+              });
+            });
+            renderInventoryStock();
+          }
+
+          window.dailyVault.unshift({
+            date: new Date().toLocaleString(),
+            type: "Supplier Receipt",
+            details: vendorName,
+            amount: `-ZMW ${totalAmt.toFixed(2)}`,
+            status: "Parsed AI",
+            image: null
+          });
+          renderVault();
+
+          if (window.saveStateToCloud) window.saveStateToCloud();
+          statusEl.innerText = `✅ Success! Server parsed "${vendorName}" for ZMW ${totalAmt} & updated inventory![cite: 10]`;
+        } else {
+          statusEl.innerText = "✅ Receipt processed by server AI!";
+        }
+      } catch (err) {
+        statusEl.innerText = "❌ Upload failed: " + err.message;
+      }
+    }
+
+    async function handleZReportUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('scan-status');
+      statusEl.innerText = "⏳ Processing Z-Report via server AI...";
+
+      const formData = new FormData();
+      formData.append("receipt", file);
+
+      try {
+        const uploadUrl = window.location.origin ? (window.location.origin + "/upload") : "/upload";
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) throw new Error("Server error processing Z-Report.");
+
+        const result = await response.json().catch(() => null);
+
+        if (result && result.Total) {
+          const zTotal = Number(result.Total);
+          
+          const revInput = document.getElementById('daily-revenue-input');
+          const currentRev = parseFloat(revInput.value) || 0;
+          revInput.value = (currentRev + zTotal).toFixed(2);
+
+          window.dailyVault.unshift({
+            date: new Date().toLocaleString(),
+            type: "Z-Report Scan",
+            details: "Automated Daily Register Summary",
+            amount: `+ZMW ${zTotal.toFixed(2)}`,
+            status: "Synced AI",
+            image: null
+          });
+          renderVault();
+
+          statusEl.innerText = `✅ Z-Report processed! Added ZMW ${zTotal.toFixed(2)} to daily revenue!`;
+        } else {
+          statusEl.innerText = "✅ Z-Report processed via server!";
+        }
+      } catch (err) {
+        statusEl.innerText = "❌ Error uploading Z-Report: " + err.message;
+      }
+    }
+
+    function renderVault() {
       const tbody = document.getElementById('vault-table-body');
       if (!tbody) return;
       tbody.innerHTML = '';
+
       if (window.dailyVault.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No records.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No saved records yet.</td></tr>';
         return;
       }
+
       window.dailyVault.forEach(rec => {
-        const imgHtml = rec.image ? `<a href="${rec.image}" target="_blank" style="color:var(--primary-emerald);">View Image</a>` : 'No Image';
+        let imageHtml = '<span style="color:var(--text-muted); font-size:0.8rem;">No Image</span>';
+        if (rec.image) {
+          imageHtml = `<a href="${rec.image}" target="_blank" style="display:inline-flex; align-items:center; gap:0.3rem; color:var(--primary-emerald); font-weight:600; font-size:0.8rem; text-decoration:none;"><span style="font-size:1rem;">🖼️</span> View Image</a>`;
+        }
+
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${rec.date}</td><td><strong>${rec.type}</strong></td><td>${rec.details}</td><td><strong style="color:var(--primary-emerald);">${rec.amount}</strong></td><td>${rec.status}</td><td>${imgHtml}</td>`;
+        tr.innerHTML = `
+          <td>${rec.date}</td>
+          <td><strong>${rec.type}</strong></td>
+          <td>${rec.details}</td>
+          <td><strong style="color: ${rec.amount.startsWith('+') || !rec.amount.startsWith('-') ? 'var(--primary-emerald)' : 'var(--red-danger)'};">${rec.amount}</strong></td>
+          <td><span style="padding: 0.2rem 0.5rem; background: rgba(16,185,129,0.15); color: var(--primary-emerald); border-radius: 4px; font-size: 0.75rem; font-weight: 700;">${rec.status}</span></td>
+          <td>${imageHtml}</td>
+        `;
         tbody.appendChild(tr);
       });
-    };
+      updateMetricsAndProfits();
+    }
 
-    window.addKwacha = function(amt) {
-      const input = document.getElementById('daily-revenue-input');
-      input.value = (parseFloat(input.value || 0) + amt).toFixed(2);
-    };
-    window.resetRevenue = function() { document.getElementById('daily-revenue-input').value = "0.00"; };
-
-    window.exportCSV = function() {
+    function exportCSV() {
+      if (window.dailyVault.length === 0) { alert("No data to export!"); return; }
       let csv = "Date,Type,Details,Amount,Status\n";
-      window.dailyVault.forEach(r => { csv += `"${r.date}","${r.type}","${r.details}","${r.amount}","${r.status}"\n`; });
+      window.dailyVault.forEach(r => {
+        csv += `"${r.date}","${r.type}","${r.details}","${r.amount}","${r.status}"\n`;
+      });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'Ledger_Report.csv'; a.click();
-    };
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Retail_Ledger_Report_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
 
-    window.shareWhatsApp = function() {
-      window.open(`https://api.whatsapp.com/send?text=` + encodeURIComponent("📊 *Retail Daily Ledger AI Summary*"), '_blank');
-    };
+    function shareWhatsApp() {
+      const text = encodeURIComponent("📊 *Retail Daily Ledger AI Summary* 🇿🇲\nCheck out my latest automated inventory and daily profit closeout vault!");
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    }
   </script>
 </body>
 </html>
