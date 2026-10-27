@@ -51,7 +51,8 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
     }`;
 
     let response;
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+    // Restored your exact model fallbacks
+    const modelsToTry = ['gemini-3.8', 'gemini-3.6', 'gemini-3.5', 'gemini-2.5-flash'];
     
     for (const modelName of modelsToTry) {
       try {
