@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
   res.send('Retail Daily Ledger AI Backend is Live!');
 });
 
-// Robust Endpoint with Model Fallbacks (3.8 -> 3.6 -> 3.5)
+// Real AI Vision Receipt & Z-Report Scan Endpoint
 app.post('/upload', upload.single('receipt'), async (req, res) => {
   try {
     if (!req.file) {
@@ -31,7 +31,7 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
     }
 
     if (!ai || !apiKey) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is missing on the server.' });
+      return res.status(500).json({ error: 'GEMINI_API_KEY missing on server environment.' });
     }
 
     const imagePart = {
@@ -41,7 +41,7 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
       }
     };
 
-    const prompt = `Analyze this uploaded retail document image (supplier receipt, invoice, or register Z-report). 
+    const prompt = `You are an expert retail accounting AI for Lusaka, Zambia. Analyze this uploaded retail document image (supplier receipt, invoice, or register Z-report). 
     Extract the real data visible in the image and return ONLY a valid JSON object matching this structure precisely:
     {
       "Vendor": "Actual store or supplier name found on the image",
@@ -51,10 +51,10 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
       ],
       "DocumentType": "Receipt or ZReport or Irrelevant"
     }
-    If the image is blank or irrelevant, set DocumentType to "Irrelevant" and Total to 0. Do not include markdown code ticks.`;
+    If the image is blank, a random photo, or irrelevant to retail receipts/Z-reports, set DocumentType to "Irrelevant" and Total to 0. Do not include markdown code ticks like \`\`\`json.`;
 
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite'];
-    let responseText = null;
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+    let textResponse = null;
     let lastError = null;
 
     for (const modelName of modelsToTry) {
@@ -64,7 +64,7 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
           contents: [prompt, imagePart]
         });
         if (response && response.text) {
-          responseText = response.text.trim();
+          textResponse = response.text.trim();
           break;
         }
       } catch (err) {
@@ -73,17 +73,17 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
       }
     }
 
-    if (!responseText) {
+    if (!textResponse) {
       throw lastError || new Error("All model fallbacks failed.");
     }
 
-    if (responseText.startsWith('```json')) {
-      responseText = responseText.replace(/^```json/, '').replace(/```$/, '').trim();
-    } else if (responseText.startsWith('```')) {
-      responseText = responseText.replace(/^```/, '').replace(/```$/, '').trim();
+    if (textResponse.startsWith('```json')) {
+      textResponse = textResponse.replace(/^```json/, '').replace(/```$/, '').trim();
+    } else if (textResponse.startsWith('```')) {
+      textResponse = textResponse.replace(/^```/, '').replace(/```$/, '').trim();
     }
 
-    const parsedData = JSON.parse(responseText);
+    const parsedData = JSON.parse(textResponse);
     res.json(parsedData);
   } catch (error) {
     console.error('AI Vision Processing Error:', error);
