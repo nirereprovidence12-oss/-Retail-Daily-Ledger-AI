@@ -51,8 +51,8 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
     }`;
 
     let response;
-    // Your requested model fallback array
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+    // Using the real, active production models supported by the SDK
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
     
     for (const modelName of modelsToTry) {
       try {
