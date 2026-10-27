@@ -47,10 +47,24 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
     }
     If the image is blank, a selfie, or irrelevant, set DocumentType to "Irrelevant" and Total to 0.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [prompt, imagePart]
-    });
+    let response;
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    
+    for (const modelName of modelsToTry) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents: [prompt, imagePart]
+        });
+        if (response && response.text) break;
+      } catch (err) {
+        console.warn(`Model ${modelName} failed, trying fallback...`);
+      }
+    }
+
+    if (!response || !response.text) {
+      throw new Error('All Gemini model fallbacks failed to generate content.');
+    }
 
     let textResponse = response.text.trim();
     if (textResponse.startsWith('```json')) {
@@ -70,4 +84,4 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
+})
