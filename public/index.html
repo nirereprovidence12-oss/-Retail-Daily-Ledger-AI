@@ -1001,8 +1001,9 @@
 
         const result = await response.json().catch(() => null);
 
-        if (!result || result.DocumentType === "Irrelevant" || (!result.Vendor && !result.Total && (!result.Items || result.Items.length === 0))) {
-          statusEl.innerText = "❌ AI Rejected: Irrelevant document detected. Please upload a valid supplier receipt.";
+        // STRICT REJECTION CHECK
+        if (!result || result.DocumentType === "Irrelevant" || result.DocumentType === "ZReport" || (!result.Vendor && !result.Total)) {
+          statusEl.innerText = "❌ AI Rejected: This is not a valid supplier receipt. Please upload an appropriate invoice or receipt.";
           return;
         }
 
@@ -1064,7 +1065,8 @@
 
         const result = await response.json().catch(() => null);
 
-        if (!result || result.DocumentType === "Irrelevant" || (!result.Total && (!result.Items || result.Items.length === 0))) {
+        // STRICT REJECTION CHECK
+        if (!result || result.DocumentType === "Irrelevant" || result.DocumentType === "Receipt" || (!result.Total && (!result.Items || result.Items.length === 0))) {
           statusEl.innerText = "❌ AI Rejected: Not a valid Z-Report. Please upload a proper sales register summary.";
           return;
         }
@@ -1074,22 +1076,10 @@
         const currentRev = parseFloat(revInput.value) || 0;
         revInput.value = (currentRev + zTotal).toFixed(2);
 
-        if (result.Items && Array.isArray(result.Items)) {
-          result.Items.forEach(soldItem => {
-            const match = window.inventoryQueue.find(b => b.item.toLowerCase().includes((soldItem.name || '').toLowerCase()) && b.qty_remaining > 0);
-            if (match) {
-              const soldQty = Number(soldItem.quantity || 1);
-              match.qty_remaining = Math.max(0, match.qty_remaining - soldQty);
-              match.sales_count = (match.sales_count || 0) + soldQty;
-            }
-          });
-          renderInventoryStock();
-        }
-
         window.dailyVault.unshift({
           date: new Date().toLocaleString(),
           type: "Z-Report Scan",
-          details: "Verified Register Summary & Inventory Deduct",
+          details: "Verified Register Summary",
           amount: `+ZMW ${zTotal.toFixed(2)}`,
           status: "Verified AI",
           image: base64Image
