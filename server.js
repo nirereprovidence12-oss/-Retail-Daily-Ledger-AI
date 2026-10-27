@@ -16,22 +16,16 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-const apiKey = process.env.GEMINI_API_KEY;
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.get('/', (req, res) => {
   res.send('Retail Daily Ledger AI Backend is Live!');
 });
 
-// Real AI Vision Receipt & Z-Report Scan Endpoint
 app.post('/upload', upload.single('receipt'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file uploaded.' });
-    }
-
-    if (!ai || !apiKey) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY missing on server environment.' });
     }
 
     const imagePart = {
@@ -41,42 +35,24 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
       }
     };
 
-    const prompt = `You are an expert retail accounting AI for Lusaka, Zambia. Analyze this uploaded retail document image (supplier receipt, invoice, or register Z-report). 
-    Extract the real data visible in the image and return ONLY a valid JSON object matching this structure precisely:
+    const prompt = `Analyze this uploaded retail document (supplier receipt, invoice, or register Z-report). 
+    Extract the following JSON structure strictly:
     {
-      "Vendor": "Actual store or supplier name found on the image",
+      "Vendor": "Name of supplier or store",
       "Total": 0.00,
       "Items": [
-        { "name": "actual product name on receipt", "quantity": 1, "unit_price": 0.00, "expiry_date": "2026-12-31" }
+        { "name": "product name", "quantity": 1, "unit_price": 0.00, "expiry_date": "YYYY-MM-DD" }
       ],
       "DocumentType": "Receipt or ZReport or Irrelevant"
     }
-    If the image is blank, a random photo, or irrelevant to retail receipts/Z-reports, set DocumentType to "Irrelevant" and Total to 0. Do not include markdown code ticks like \`\`\`json.`;
+    If the image is blank, a selfie, or irrelevant, set DocumentType to "Irrelevant" and Total to 0.`;
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-    let textResponse = null;
-    let lastError = null;
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [prompt, imagePart]
+    });
 
-    for (const modelName of modelsToTry) {
-      try {
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: [prompt, imagePart]
-        });
-        if (response && response.text) {
-          textResponse = response.text.trim();
-          break;
-        }
-      } catch (err) {
-        console.warn(`Model ${modelName} failed, trying next fallback...`, err.message);
-        lastError = err;
-      }
-    }
-
-    if (!textResponse) {
-      throw lastError || new Error("All model fallbacks failed.");
-    }
-
+    let textResponse = response.text.trim();
     if (textResponse.startsWith('```json')) {
       textResponse = textResponse.replace(/^```json/, '').replace(/```$/, '').trim();
     } else if (textResponse.startsWith('```')) {
@@ -86,8 +62,8 @@ app.post('/upload', upload.single('receipt'), async (req, res) => {
     const parsedData = JSON.parse(textResponse);
     res.json(parsedData);
   } catch (error) {
-    console.error('AI Vision Processing Error:', error);
-    res.status(500).json({ error: error.message || 'Failed to process document with Gemini AI.' });
+    console.error('AI Processing Error:', error);
+    res.status(500).json({ error: 'Failed to process document with Gemini AI.' });
   }
 });
 
