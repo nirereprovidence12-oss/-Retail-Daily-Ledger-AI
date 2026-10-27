@@ -1,3 +1,80 @@
+cat << 'EOF' > server.js
+const express = require('express');
+const multer = require('multer');
+const { GoogleGenAI } = require('@google/genai');
+require('dotenv').config();
+
+const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
+app.use(express.json());
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+app.get('/', (req, res) => {
+  res.send('Retail Daily Ledger AI Backend is Live!');
+});
+
+app.post('/upload', upload.single('receipt'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded.' });
+    }
+
+    const imagePart = {
+      inlineData: {
+        data: req.file.buffer.toString('base64'),
+        mimeType: req.file.mimetype
+      }
+    };
+
+    const prompt = `Analyze this uploaded retail document (supplier receipt, invoice, or register Z-report). 
+    Extract the following JSON structure strictly:
+    {
+      "Vendor": "Name of supplier or store",
+      "Total": 0.00,
+      "Items": [
+        { "name": "product name", "quantity": 1, "unit_price": 0.00, "expiry_date": "YYYY-MM-DD" }
+      ],
+      "DocumentType": "Receipt or ZReport or Irrelevant"
+    }
+    If the image is blank, a selfie, or irrelevant, set DocumentType to "Irrelevant" and Total to 0.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [prompt, imagePart]
+    });
+
+    let textResponse = response.text.trim();
+    if (textResponse.startsWith('```json')) {
+      textResponse = textResponse.replace(/^```json/, '').replace(/```$/, '').trim();
+    } else if (textResponse.startsWith('```')) {
+      textResponse = textResponse.replace(/^```/, '').replace(/```$/, '').trim();
+    }
+
+    const parsedData = JSON.parse(textResponse);
+    res.json(parsedData);
+  } catch (error) {
+    console.error('AI Processing Error:', error);
+    res.status(500).json({ error: 'Failed to process document with Gemini AI.' });
+  }
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+EOF
+
+cat << 'EOF' > public/index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,7 +208,7 @@
         </div>
         <h1 class="hero-title">Intelligent POS & Stock Engine for Micro-Retailers</h1>
         <p class="hero-subtitle">
-          Eliminate inventory spoilage, automate expense tracking via AI receipt scanning, and sync multi-device stall ledgers—online & offline.
+          Eliminate inventory spoilage, automate expense tracking via AI receipt scanning, and sync multi-device stall ledgersâ€”online & offline.
         </p>
 
         <div class="feature-grid">
@@ -166,7 +243,7 @@
         </div>
 
         <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary-emerald); padding: 0.75rem; border-radius: 8px; font-size: 0.8rem; color: var(--primary-emerald); margin-bottom: 1.25rem; text-align: center; font-weight: 700;">
-          💎 Lusaka Pro Tier Active: Unlimited AI Scans & Mobile Money Sync
+          ðŸ’Ž Lusaka Pro Tier Active: Unlimited AI Scans & Mobile Money Sync
         </div>
 
         <!-- Mode Toggle Tabs -->
@@ -176,7 +253,7 @@
         </div>
 
         <div id="reg-success-banner" style="display: none; background: rgba(16, 185, 129, 0.2); border: 1px solid var(--primary-emerald); color: var(--primary-emerald); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">
-          🎉 Account created successfully! Please sign in with your credentials below.
+          ðŸŽ‰ Account created successfully! Please sign in with your credentials below.
         </div>
 
         <form id="auth-form" autocomplete="off" onsubmit="handleAuthAction(event)">
@@ -193,7 +270,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Password</label>
-            <input type="password" id="auth-password" class="input-field" autocomplete="current-password" placeholder="••••••••" required>
+            <input type="password" id="auth-password" class="input-field" autocomplete="current-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
           </div>
           <button type="submit" class="btn btn-primary" id="auth-btn">
             <span id="auth-btn-text">Sign In to Dashboard</span>
@@ -211,7 +288,7 @@
     </div>
 
     <footer class="landing-footer">
-      © 2026 Retail Daily Ledger AI • Lusaka PWA
+      Â© 2026 Retail Daily Ledger AI â€¢ Lusaka PWA
     </footer>
   </div>
 
@@ -466,7 +543,7 @@
     </main>
 
     <footer class="footer">
-      © 2026 Retail Daily Ledger AI • Lusaka Commercial PWA
+      Â© 2026 Retail Daily Ledger AI â€¢ Lusaka Commercial PWA
     </footer>
   </div>
 
@@ -521,7 +598,7 @@
       
       const btn = document.getElementById('sign-out-or-back-btn');
       if (isGuest) {
-        btn.innerText = "← Exit Guest Mode";
+        btn.innerText = "â† Exit Guest Mode";
         btn.style.background = "var(--amber-warning)";
         btn.style.color = "#000";
       } else {
@@ -641,7 +718,7 @@
           target.value = isNumber ? parseFloat(val.replace(/[^0-9.]/g, '') || 0).toFixed(2) : val.trim();
         }
         const statusEl = document.getElementById('scan-status');
-        if (statusEl) statusEl.innerText = `✅ Voice/Dictation Captured: "${val}"`;
+        if (statusEl) statusEl.innerText = `âœ… Voice/Dictation Captured: "${val}"`;
       }
     }
 
@@ -760,19 +837,19 @@
         // AUTOMATED AI ACTION RECOMMENDATIONS
         let aiActionHtml = '';
         if (isOutOfStock) {
-          aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.2); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🛒 Reorder Immediately</span>`;
+          aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.2); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">ðŸ›’ Reorder Immediately</span>`;
         } else if (isNearOrExpired) {
           nearCount++;
           nearExpiryNames.push(`${batch.item} (${daysLeft <= 0 ? 'Expired' : daysLeft + 'd left'})`);
-          aiActionHtml = `<span style="background:rgba(245, 158, 11, 0.2); color:var(--amber-warning); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🏷️ Flash Sale: Markdown 20%</span>`;
+          aiActionHtml = `<span style="background:rgba(245, 158, 11, 0.2); color:var(--amber-warning); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">ðŸ·ï¸ Flash Sale: Markdown 20%</span>`;
         } else if (batch.sales_count >= 3) {
           fastCount++;
-          aiActionHtml = `<span style="background:rgba(16, 185, 129, 0.2); color:var(--primary-emerald); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🔥 Fast Mover: Restock Batch</span>`;
+          aiActionHtml = `<span style="background:rgba(16, 185, 129, 0.2); color:var(--primary-emerald); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">ðŸ”¥ Fast Mover: Restock Batch</span>`;
         } else if (batch.qty_remaining / batch.qty_supplied > 0.8 && batch.sales_count === 0) {
           slowCount++;
-          aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.15); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🐢 Stagnant: Bundle Promotion</span>`;
+          aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.15); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">ðŸ¢ Stagnant: Bundle Promotion</span>`;
         } else {
-          aiActionHtml = `<span style="background:rgba(59, 130, 246, 0.15); color:#60a5fa; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">⚡ Stable Sales</span>`;
+          aiActionHtml = `<span style="background:rgba(59, 130, 246, 0.15); color:#60a5fa; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">âš¡ Stable Sales</span>`;
         }
 
         const tr = document.createElement('tr');
@@ -780,7 +857,7 @@
           <td>${batch.date}</td>
           <td>
             <strong>${batch.item}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${batch.vendor}</span>
-            ${isOutOfStock ? '<br><span style="color:var(--red-danger); font-size:0.7rem; font-weight:800;">🔴 OUT OF STOCK</span>' : ''}
+            ${isOutOfStock ? '<br><span style="color:var(--red-danger); font-size:0.7rem; font-weight:800;">ðŸ”´ OUT OF STOCK</span>' : ''}
           </td>
           <td>${batch.qty_supplied}</td>
           <td><strong style="color:${isOutOfStock ? 'var(--red-danger)' : 'var(--primary-emerald)'};">${batch.qty_remaining}</strong></td>
@@ -789,7 +866,7 @@
             <div style="display: flex; flex-direction: column; gap: 0.3rem;">
               ${aiActionHtml}
               <span style="font-size: 0.75rem; font-weight: 700; color: ${isNearOrExpired ? 'var(--red-danger)' : 'var(--text-muted)'};">
-                ${daysLeft <= 0 ? '⚠️ Expired' : daysLeft + ' days until expiry'}
+                ${daysLeft <= 0 ? 'âš ï¸ Expired' : daysLeft + ' days until expiry'}
               </span>
             </div>
           </td>
@@ -891,7 +968,7 @@
         div.innerHTML = `
           <input type="text" class="input-field" value="${exp.item}" onchange="updateExpenseItem(${idx}, 'item', this.value)">
           <input type="number" class="input-field" value="${exp.amount}" step="0.01" onchange="updateExpenseItem(${idx}, 'amount', this.value)">
-          <button class="btn btn-danger" style="width: auto; padding: 0.4rem;" onclick="removeExpense(${idx})">✕</button>
+          <button class="btn btn-danger" style="width: auto; padding: 0.4rem;" onclick="removeExpense(${idx})">âœ•</button>
         `;
         container.appendChild(div);
       });
@@ -958,7 +1035,7 @@
       if (!file) return;
 
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerText = "⏳ AI analyzing supplier receipt...";
+      statusEl.innerText = "â³ AI analyzing supplier receipt...";
 
       const base64Image = await fileToBase64(file).catch(() => null);
       const formData = new FormData();
@@ -972,7 +1049,7 @@
         const result = await response.json().catch(() => null);
 
         if (!result || result.DocumentType === "Irrelevant" || (!result.Vendor && !result.Total && (!result.Items || result.Items.length === 0))) {
-          statusEl.innerText = "❌ AI Rejected: Irrelevant document detected. Please upload a valid supplier receipt.";
+          statusEl.innerText = "âŒ AI Rejected: Irrelevant document detected. Please upload a valid supplier receipt.";
           return;
         }
 
@@ -1010,9 +1087,9 @@
         renderVault();
 
         window.saveStateToCloud();
-        statusEl.innerText = `✅ AI Verified & Parsed "${vendorName}" for ZMW ${totalAmt}!`;
+        statusEl.innerText = `âœ… AI Verified & Parsed "${vendorName}" for ZMW ${totalAmt}!`;
       } catch (err) {
-        statusEl.innerText = "❌ Upload failed: " + err.message;
+        statusEl.innerText = "âŒ Upload failed: " + err.message;
       }
     }
 
@@ -1021,7 +1098,7 @@
       if (!file) return;
 
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerText = "⏳ AI analyzing Z-Report / Sales Slip...";
+      statusEl.innerText = "â³ AI analyzing Z-Report / Sales Slip...";
 
       const base64Image = await fileToBase64(file).catch(() => null);
       const formData = new FormData();
@@ -1035,7 +1112,7 @@
         const result = await response.json().catch(() => null);
 
         if (!result || result.DocumentType === "Irrelevant" || (!result.Total && (!result.Items || result.Items.length === 0))) {
-          statusEl.innerText = "❌ AI Rejected: Not a valid Z-Report. Please upload a proper sales register summary.";
+          statusEl.innerText = "âŒ AI Rejected: Not a valid Z-Report. Please upload a proper sales register summary.";
           return;
         }
 
@@ -1067,9 +1144,9 @@
         renderVault();
 
         window.saveStateToCloud();
-        statusEl.innerText = `✅ Z-Report Verified! Added ZMW ${zTotal.toFixed(2)} to revenue.`;
+        statusEl.innerText = `âœ… Z-Report Verified! Added ZMW ${zTotal.toFixed(2)} to revenue.`;
       } catch (err) {
-        statusEl.innerText = "❌ Error uploading Z-Report: " + err.message;
+        statusEl.innerText = "âŒ Error uploading Z-Report: " + err.message;
       }
     }
 
@@ -1086,7 +1163,7 @@
       window.dailyVault.forEach(rec => {
         let imageHtml = '<span style="color:var(--text-muted); font-size:0.8rem;">No Image</span>';
         if (rec.image) {
-          imageHtml = `<a href="${rec.image}" target="_blank" style="display:inline-flex; align-items:center; gap:0.3rem; color:var(--primary-emerald); font-weight:600; font-size:0.8rem; text-decoration:none;"><span style="font-size:1rem;">🖼️</span> View Image</a>`;
+          imageHtml = `<a href="${rec.image}" target="_blank" style="display:inline-flex; align-items:center; gap:0.3rem; color:var(--primary-emerald); font-weight:600; font-size:0.8rem; text-decoration:none;"><span style="font-size:1rem;">ðŸ–¼ï¸</span> View Image</a>`;
         }
 
         const tr = document.createElement('tr');
@@ -1118,9 +1195,17 @@
     }
 
     function shareWhatsApp() {
-      const text = encodeURIComponent("📊 *Retail Daily Ledger AI Summary* 🇿🇲\nCheck out my latest automated inventory and daily profit closeout vault!");
+      const text = encodeURIComponent("ðŸ“Š *Retail Daily Ledger AI Summary* ðŸ‡¿ðŸ‡²\nCheck out my latest automated inventory and daily profit closeout vault!");
       window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     }
   </script>
 </body>
 </html>
+EOF
+
+# Sync, push to GitHub (Render), and deploy to Firebase
+cp public/index.html index.html
+git add public/index.html index.html server.js
+git commit -m "Remove manual demand selector and replace with automated AI action recommendations and reliable voice prompts"
+git push origin main
+firebase deploy --only hosting
