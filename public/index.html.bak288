@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retail Daily Ledger AI - Lusaka Commercial PWA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-dark: #1e293b;
+      --border-dark: #334155;
+      --primary-emerald: #10b981;
+      --primary-emerald-hover: #059669;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --amber-warning: #f59e0b;
+      --red-danger: #ef4444;
+      --radius: 12px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+    #landing-screen { min-height: 100vh; background: radial-gradient(circle at top right, #1e293b, #0f172a); color: white; display: flex; flex-direction: column; justify-content: space-between; padding: 2rem 1rem; }
+    .landing-container { max-width: 1100px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr; gap: 2.5rem; align-items: center; padding: 2rem 0; }
+    @media (min-width: 868px) { .landing-container { grid-template-columns: 1.2fr 1fr; } }
+    .hero-brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 800; font-size: 1.5rem; color: var(--primary-emerald); margin-bottom: 1.5rem; }
+    .hero-title { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.25rem; }
+    .hero-subtitle { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+    .feature-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-dark); padding: 1.25rem; border-radius: var(--radius); }
+    .feature-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: var(--primary-emerald); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
+    .feature-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .feature-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+    .auth-card { background: var(--card-dark); color: var(--text-main); padding: 2.5rem; border-radius: 20px; border: 1px solid var(--border-dark); box-shadow: var(--shadow); }
+    .auth-header { text-align: center; margin-bottom: 1.5rem; }
+    .auth-title { font-size: 1.5rem; font-weight: 800; }
+    .auth-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
+    .input-field { width: 100%; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border-dark); background: #0f172a; color: white; font-size: 0.95rem; outline: none; }
+    .input-field:focus { border-color: var(--primary-emerald); }
+    .input-with-mic { display: flex; gap: 0.4rem; align-items: center; }
+    .mic-btn { background: rgba(16, 185, 129, 0.15); color: var(--primary-emerald); border: 1px solid var(--border-dark); padding: 0.75rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .btn { width: 100%; padding: 0.85rem 1.5rem; border-radius: 8px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .btn-primary { background: var(--primary-emerald); color: white; }
+    .btn-secondary { background: #334155; color: var(--text-main); border: 1px solid var(--border-dark); }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--red-danger); border: 1px solid var(--red-danger); }
+    .divider { display: flex; align-items: center; text-align: center; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
+    .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-dark); }
+    #main-app { display: none; flex-direction: column; min-height: 100vh; }
+    .app-header { background: var(--card-dark); border-bottom: 1px solid var(--border-dark); padding: 1rem 1.5rem; }
+    .header-container { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .brand-title { font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; color: var(--primary-emerald); }
+    .user-badge-group { display: flex; align-items: center; gap: 0.5rem; }
+    .user-badge { background: #0f172a; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border-dark); }
+    .sync-btn { background: var(--primary-emerald); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .app-body { max-width: 1100px; margin: 1.5rem auto; width: 100%; padding: 0 1rem; flex: 1; }
+    .alert-banner { background: var(--amber-warning); color: #000; padding: 0.85rem 1.25rem; border-radius: 12px; display: none; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; font-weight: 700; }
+    .nav-tabs { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .tab-btn { flex: 1; padding: 0.85rem 1rem; background: var(--card-dark); border: 1px solid var(--border-dark); border-radius: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .tab-btn.active { background: var(--primary-emerald); color: white; border-color: var(--primary-emerald); }
+    .card { background: var(--card-dark); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border-dark); margin-bottom: 1.5rem; }
+    .card-title { font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
+    .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .metric-card { padding: 1rem; border-radius: 10px; text-align: center; border: 1px solid var(--border-dark); background: #0f172a; }
+    .scan-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .upload-box { border: 2px dashed var(--border-dark); border-radius: 12px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; background: #0f172a; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 0.75rem; border-bottom: 2px solid var(--border-dark); color: var(--text-muted); font-size: 0.75rem; font-weight: 800; }
+    td { padding: 0.85rem 0.75rem; border-bottom: 1px solid var(--border-dark); }
+    .kwacha-btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .kwacha-btn { padding: 0.4rem 0.8rem; background: #0f172a; border: 1px solid var(--border-dark); color: var(--text-main); border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+    .footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--text-muted); margin-top: auto; }
+  </style>
+</head>
+<body>
+  <div id="landing-screen">
+    <div class="landing-container">
+      <div>
+        <div class="hero-brand"><i data-lucide="package"></i><span>Retail Daily Ledger AI</span></div>
+        <h1 class="hero-title">Intelligent POS & Stock Engine for Micro-Retailers</h1>
+        <p class="hero-subtitle">Eliminate inventory spoilage, automate expense tracking via AI receipt scanning, and sync multi-device stall ledgers—online & offline.</p>
+        <div class="feature-grid">
+          <div class="feature-card"><div class="feature-icon"><i data-lucide="scan"></i></div><div class="feature-title">AI Dual Scan</div><div class="feature-desc">Scan supplier receipts via backend AI to instantly update expense ledgers and FIFO stock queues.</div></div>
+          <div class="feature-card"><div class="feature-icon"><i data-lucide="cloud"></i></div><div class="feature-title">Firebase Cloud Sync</div><div class="feature-desc">Real-time cloud database syncing across devices with offline fallbacks.</div></div>
+          <div class="feature-card"><div class="feature-icon"><i data-lucide="shield-alert"></i></div><div class="feature-title">FIFO Spoilage Guard</div><div class="feature-desc">Track batch expirations automatically to preserve wholesale margins.</div></div>
+          <div class="feature-card"><div class="feature-icon"><i data-lucide="bar-chart-3"></i></div><div class="feature-title">Profit Analytics</div><div class="feature-desc">Real-time net profit calculations, CSV reporting, and one-tap WhatsApp summaries.</div></div>
+        </div>
+      </div>
+      <div class="auth-card">
+        <div class="auth-header"><h2 class="auth-title" id="auth-form-title">Cloud Vendor Sign In</h2><p class="auth-desc" id="auth-form-desc">Access your synced stall ledger and inventory</p></div>
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 0.75rem; border-radius: 8px; font-size: 0.8rem; color: #10b981; margin-bottom: 1.25rem; text-align: center; font-weight: 700;">💎 Lusaka Pro Tier Active: Unlimited AI Scans & Mobile Money Sync</div>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: #0f172a; padding: 4px; border-radius: 8px; border: 1px solid #334155;">
+          <button type="button" id="tab-signin-btn" class="btn" style="background: #10b981; color: white; font-size: 0.85rem; padding: 0.5rem;" onclick="setAuthMode('signin')">Sign In</button>
+          <button type="button" id="tab-signup-btn" class="btn" style="background: transparent; color: #94a3b8; font-size: 0.85rem; padding: 0.5rem;" onclick="setAuthMode('signup')">Create Account</button>
+        </div>
+        <div id="reg-success-banner" style="display: none; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">🎉 Account created successfully! Please sign in with your credentials below.</div>
+        <div id="auth-error-banner" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; text-align: center;"></div>
+        <form id="auth-form" autocomplete="off" onsubmit="handleAuthAction(event)">
+          <div class="form-group" id="stall-name-group" style="display: none;"><label class="form-label">Stall / Business Name</label><input type="text" id="auth-stall-name" class="input-field" placeholder="e.g. Lusaka Central Market Stall 4B"></div>
+          <div class="form-group"><label class="form-label">Email Address / Stall ID</label><div class="input-with-mic"><input type="email" id="auth-email" class="input-field" autocomplete="email" placeholder="e.g. vendor@lusakaretail.com" required><button type="button" class="mic-btn" onclick="promptVoiceInput('auth-email')"><i data-lucide="mic" style="width:18px;"></i></button></div></div>
+          <div class="form-group"><label class="form-label">Password</label><input type="password" id="auth-password" class="input-field" autocomplete="current-password" placeholder="••••••••" required></div>
+          <button type="submit" class="btn btn-primary" id="auth-btn"><span id="auth-btn-text">Sign In to Dashboard</span><i data-lucide="arrow-right" id="auth-btn-icon"></i></button>
+        </form>
+        <div class="divider">OR</div>
+        <button onclick="startGuestDemo()" class="btn btn-secondary"><i data-lucide="play-circle"></i><span>Explore Offline Guest Mode</span></button>
+      </div>
+    </div>
+    <footer class="landing-footer" style="text-align:center; padding:1rem; color:#94a3b8;">© 2026 Retail Daily Ledger AI • Lusaka PWA</footer>
+  </div>
+  <div id="main-app">
+    <header class="app-header"><div class="header-container"><div><div class="brand-title"><i data-lucide="package"></i><span>Retail Daily Ledger AI</span></div><div style="font-size:0.75rem; color:#94a3b8;">Supplier Intelligence & Spoilage Monitor</div></div><div class="user-badge-group"><span class="user-badge" id="user-display">Vendor</span><button class="sync-btn" onclick="logout()" id="sign-out-or-back-btn">Sign Out</button></div></div></header>
+    <main class="app-body">
+      <div class="alert-banner" id="expiry-banner"><div style="display:flex; align-items:center; gap:0.5rem;"><i data-lucide="alert-triangle"></i><span id="expiry-banner-text">ACTIVE STOCK EXPIRY WARNING</span></div><button onclick="dismissWarning()" style="background:rgba(0,0,0,0.2);border:none;color:black;padding:0.2rem 0.6rem;border-radius:4px;font-weight:700;">Dismiss</button></div>
+      <nav class="nav-tabs"><button class="tab-btn active" onclick="switchTab('tab-stock', this)"><i data-lucide="boxes"></i><span>Stock Monitor & AI Action Hub</span></button><button class="tab-btn" onclick="switchTab('tab-ledger', this)"><i data-lucide="receipt"></i><span>Daily Ledger & Scan</span></button><button class="tab-btn" onclick="switchTab('tab-vault', this)"><i data-lucide="folder"></i><span>Vault & Reports</span></button></nav>
+      <section id="tab-stock" class="tab-content"><div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;"><div class="card-title"><i data-lucide="boxes" style="color:#10b981;"></i><span>Inventory & Automated AI Action Recommendations</span></div><button class="btn btn-danger" style="width:auto; padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="clearAllData()">Clear Data</button></div><p style="font-size:0.85rem; color:#94a3b8; margin-bottom:1rem;">Deduct items instantly upon checkout. AI automatically calculates velocity and suggests actions.</p><div style="background:#0f172a; border:1px solid #334155; padding:1rem; border-radius:8px; margin-bottom:1.5rem;"><div style="font-weight:800; color:#10b981; margin-bottom:0.5rem;">Instant Counter POS Sale</div><div style="display:flex; gap:0.5rem; flex-wrap:wrap;"><select id="pos-item-select" class="input-field" style="flex:2; min-width:180px;" onchange="onPOSItemSelected()"></select><input type="number" id="pos-price-override" class="input-field" style="flex:1; min-width:90px;" placeholder="Price (ZMW)" step="0.50"><input type="number" id="pos-qty" class="input-field" style="flex:0.8; min-width:60px;" value="1" min="1"><button class="btn btn-primary" style="width:auto;" onclick="deductPOSSale()">Deduct Sale</button></div></div><div class="metrics-row"><div class="metric-card fast"><div style="font-size:0.75rem; color:#94a3b8;">Fast Movers</div><div class="metric-val" id="metric-fast">0</div></div><div class="metric-card near"><div style="font-size:0.75rem; color:#94a3b8;">Near Expiry</div><div class="metric-val" id="metric-near">0</div></div><div class="metric-card slow"><div style="font-size:0.75rem; color:#94a3b8;">Slow / Stagnant</div><div class="metric-val" id="metric-slow">0</div></div><div class="metric-card" style="border-color:#3b82f6; color:#60a5fa;"><div style="font-size:0.75rem; color:#94a3b8;">Net Profit</div><div class="metric-val" id="metric-profit">ZMW 0.00</div></div><div class="metric-card" style="border-color:#ef4444; color:#ef4444;"><div style="font-size:0.75rem; color:#94a3b8;">Biggest Expense</div><div class="metric-val" id="metric-biggest-exp" style="font-size:1.1rem;">None</div></div></div><div style="background:#0f172a; border:1px solid #334155; padding:1rem; border-radius:8px; margin-bottom:1.5rem;"><div style="font-weight:800; font-size:0.9rem; margin-bottom:0.75rem;">+ Add New Supplier Batch</div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.5rem;"><input type="text" id="add-item" class="input-field" placeholder="Item Name"><input type="text" id="add-vendor" class="input-field" placeholder="Supplier / Vendor"><input type="number" id="add-qty" class="input-field" placeholder="Qty" min="1"><input type="number" id="add-price" class="input-field" placeholder="Unit Price (ZMW)" min="0" step="0.50"><input type="date" id="add-expiry" class="input-field"></div><button class="btn btn-primary" style="margin-top:0.75rem; width:100%;" onclick="addNewStockBatch()">Save Stock Batch</button></div><div style="overflow-x:auto;"><table><thead><tr><th>DATE</th><th>PRODUCT & SUPPLIER</th><th>SUPPLIED</th><th>REMAINING</th><th>UNIT PRICE</th><th>AI ACTION</th><th>ADJUST</th></tr></thead><tbody id="inventory-table-body"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:2rem;">No active stock batches.</td></tr></tbody></table></div></div></section>
+      <section id="tab-ledger" class="tab-content" style="display:none;"><div class="card"><div class="card-title"><i data-lucide="receipt" style="color:#10b981;"></i><span>2. Revenue & Supplier Receipts</span></div><p style="font-size:0.85rem; color:#94a3b8; margin:1rem 0;">Scan supplier receipts or Z-reports via backend AI.</p><div class="scan-zone"><label class="upload-box"><input type="file" accept="image/*" style="display:none;" onchange="handleSupplierReceiptUpload(event)"><div style="font-weight:800;">Supplier Receipt (AI Scan)</div></label><label class="upload-box"><input type="file" accept="image/*" style="display:none;" onchange="handleZReportUpload(event)"><div style="font-weight:800;">Scan Z-Report / Sales Slip</div></label></div><div id="scan-status" style="font-size:0.85rem; font-weight:700; color:#10b981; margin-bottom:1rem;"></div><div id="expenses-container" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;"></div><div style="background:#0f172a; border:1px solid #334155; padding:0.85rem; border-radius:8px; display:flex; justify-content:space-between; font-weight:800; margin-bottom:1.5rem;"><span>Total Expenses:</span><span id="total-expenses-display" style="color:#10b981;">ZMW 0.00</span></div><div style="border-top:1px solid #334155; padding-top:1.25rem;"><div style="font-weight:800; font-size:0.85rem; margin-bottom:0.5rem;">Total Daily Sales / Revenue (ZMW)</div><div style="display:flex;gap:8px;align-items:center;width:100%"><input type="number" id="daily-revenue-input" class="input-field" placeholder="0.00" style="font-size:1.25rem;font-weight:700;flex:1" value="0.00"><button type="button" onclick="promptVoiceInput('daily-revenue-input',true)" style="background:#10b981;color:white;border:none;padding:12px 16px;border-radius:8px;font-weight:800;cursor:pointer;white-space:nowrap">🎤 Voice</button></div><div class="kwacha-btn-group"><button class="kwacha-btn" onclick="addKwacha(50)">+50</button><button class="kwacha-btn" onclick="addKwacha(100)">+100</button><button class="kwacha-btn" onclick="addKwacha(500)">+500</button><button class="kwacha-btn" onclick="addKwacha(1000)">+1000</button><button class="kwacha-btn" style="color:#ef4444;" onclick="resetRevenue()">Clear</button></div><button class="btn btn-primary" style="margin-top:1.25rem;" onclick="calculateAndSaveLedger()">Calculate Profit & Log Ledger</button></div></div></section>
+      <section id="tab-vault" class="tab-content" style="display:none;"><div class="card"><div style="display:flex; justify-content:space-between;"><div class="card-title"><i data-lucide="lock" style="color:#f59e0b;"></i><span>Offline Vault & Scan Archive</span></div><div style="display:flex; gap:0.5rem;"><button class="btn btn-secondary" style="width:auto; padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="exportCSV()">Export CSV</button><button class="btn btn-primary" style="width:auto; padding:0.4rem 0.8rem; font-size:0.8rem; background:#25d366;" onclick="shareWhatsApp()">WhatsApp</button></div></div><div style="overflow-x:auto; margin-top:1rem;"><table><thead><tr><th>DATE</th><th>TYPE</th><th>DETAILS</th><th>AMOUNT</th><th>STATUS</th><th>IMAGE</th></tr></thead><tbody id="vault-table-body"><tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:2rem;">No saved records yet.</td></tr></tbody></table></div></div></section>
+    </main>
+    <footer class="footer">© 2026 Retail Daily Ledger AI • Lusaka Commercial PWA</footer>
+  </div>
+<script>
+    let currentAuthMode = 'signin';
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const savedUser = JSON.parse(localStorage.getItem('retail_user_session')||'null');
+        if (savedUser && !savedUser.isGuest) {
+          const reg = JSON.parse(localStorage.getItem('registered_stall_' + savedUser.email) || 'null');
+          if (!reg) { localStorage.removeItem('retail_user_session'); }
+          else { window.enterAppSession(savedUser.email, savedUser.isGuest, savedUser.stallName, true); }
+        } else if (savedUser && savedUser.isGuest) {
+          window.enterAppSession(savedUser.email, true, savedUser.stallName, true);
+        }
+      } catch {}
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      fetch("https://retail-daily-ledger-ai.onrender.com/").catch(() => {});
+    });
+    function showAuthError(msg){
+      const el = document.getElementById('auth-error-banner');
+      if(!el) { alert(msg); return; }
+      el.innerText = msg;
+      el.style.display = 'block';
+      setTimeout(()=>{ el.style.display='none'; }, 5000);
+    }
+    window.setAuthMode = function(mode) {
+      currentAuthMode = mode;
+      const titleEl = document.getElementById('auth-form-title');
+      const descEl = document.getElementById('auth-form-desc');
+      const btnTextEl = document.getElementById('auth-btn-text');
+      const signInBtn = document.getElementById('tab-signin-btn');
+      const signUpBtn = document.getElementById('tab-signup-btn');
+      const stallGroup = document.getElementById('stall-name-group');
+      const successBanner = document.getElementById('reg-success-banner');
+      const errorBanner = document.getElementById('auth-error-banner');
+      if (successBanner) successBanner.style.display = 'none';
+      if (errorBanner) errorBanner.style.display = 'none';
+      if (mode === 'signin') {
+        titleEl.innerText = "Cloud Vendor Sign In";
+        descEl.innerText = "Access your synced stall ledger and inventory";
+        btnTextEl.innerText = "Sign In to Dashboard";
+        signInBtn.style.background = "#10b981";
+        signInBtn.style.color = "white";
+        signUpBtn.style.background = "transparent";
+        signUpBtn.style.color = "#94a3b8";
+        stallGroup.style.display = 'none';
+      } else {
+        titleEl.innerText = "Create Cloud Account";
+        descEl.innerText = "Register your stall for multi-device cloud sync";
+        btnTextEl.innerText = "Register New Account";
+        signUpBtn.style.background = "#10b981";
+        signUpBtn.style.color = "white";
+        signInBtn.style.background = "transparent";
+        signInBtn.style.color = "#94a3b8";
+        stallGroup.style.display = 'block';
+      }
+    };
+    window.enterAppSession = function(email, isGuest = false, stallName = '', skipAnimation = false) {
+      const displayName = stallName || (email ? email.split('@')[0] : 'Vendor');
+      document.getElementById('user-display').innerText = isGuest ? "Guest Mode" : displayName;
+      const btn = document.getElementById('sign-out-or-back-btn');
+      if (isGuest) { btn.innerText = "← Exit Guest Mode"; btn.style.background = "#f59e0b"; btn.style.color = "#000"; }
+      else { btn.innerText = "Sign Out"; btn.style.background = "#10b981"; btn.style.color = "#fff"; }
+      if (skipAnimation) { document.getElementById('landing-screen').style.display = 'none'; document.getElementById('main-app').style.display = 'flex'; }
+      else { setTimeout(() => { document.getElementById('landing-screen').style.display = 'none'; document.getElementById('main-app').style.display = 'flex'; }, 800); }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+    window.handleAuthAction = function(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim().toLowerCase();
+      const pass = document.getElementById('auth-password').value;
+      const stallName = document.getElementById('auth-stall-name').value.trim();
+      const btnText = document.getElementById('auth-btn-text');
+      if (!email || !pass) { showAuthError("Please enter both email and password."); return; }
+      const storageKey = 'registered_stall_' + email;
+      const storedRaw = localStorage.getItem(storageKey);
+      let storedReg = null;
+      try { storedReg = storedRaw ? JSON.parse(storedRaw) : null; } catch { storedReg = null; }
+      if (currentAuthMode === 'signup') {
+        if (!stallName) { showAuthError("Please enter your Stall or Business Name to register."); return; }
+        if (storedReg) { showAuthError("❌ Account already exists! Please Sign In."); setAuthMode('signin'); return; }
+        localStorage.setItem(storageKey, JSON.stringify({ email, stallName, pass }));
+        document.getElementById('reg-success-banner').style.display = 'block';
+        const eb = document.getElementById('auth-error-banner'); if(eb) eb.style.display='none';
+        setAuthMode('signin');
+        document.getElementById('auth-email').value = email;
+        document.getElementById('auth-password').value = '';
+        return;
+      }
+      if (!storedReg) { showAuthError("❌ No account found with this email. Please Create Account first."); return; }
+      if (storedReg.pass !== pass) { showAuthError("❌ Wrong password! Please try again."); return; }
+      btnText.innerText = "Connecting to Secure Cloud...";
+      setTimeout(() => {
+        const activeStall = storedReg.stallName || email.split('@')[0];
+        const session = { email, stallName: activeStall, isGuest: false, loggedInAt: new Date().toISOString() };
+        localStorage.setItem('retail_user_session', JSON.stringify(session));
+        window.enterAppSession(email, false, activeStall);
+      }, 600);
+    };
+    window.startGuestDemo = function() { const gBtn=document.querySelector(".btn-secondary"); if(gBtn){gBtn.innerHTML="⏳ Initializing Guest Ledger..."; gBtn.disabled=true;} const steps=["🔍 Checking offline cache...","📦 Loading demo stock...","💾 Preparing guest vault...","✅ Guest ready"]; let i=0; const iv=setInterval(()=>{ const s=document.getElementById("scan-status"); if(s && steps[i]) s.innerText=steps[i]; i++; if(i>=steps.length){ clearInterval(iv); _finishGuest(); } },400); function _finishGuest(){
+      const guestBtn = document.querySelector('#landing-screen .btn-secondary');
+      const session = { email: "guest@lusakaretail.com", stallName: "Guest Market Stall", isGuest: true, loggedInAt: new Date().toISOString() }; localStorage.setItem("retail_user_session", JSON.stringify(session)); window.enterAppSession("guest@lusakaretail.com", true, "Guest Market Stall"); } }
+    window.logout = function() { localStorage.removeItem('retail_user_session'); document.getElementById('main-app').style.display = 'none'; document.getElementById('landing-screen').style.display = 'flex'; };
+    window.inventoryQueue = JSON.parse(localStorage.getItem('retail_inventory') || '[]');
+    window.expensesList = JSON.parse(localStorage.getItem('retail_expenses') || '[]');
+    window.dailyVault = JSON.parse(localStorage.getItem('retail_vault') || '[]');
+    window.addEventListener('DOMContentLoaded', () => { renderInventoryStock(); renderExpenses(); renderVault(); updateMetricsAndProfits(); });
+    function switchTab(tabId, btn) { document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none'); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active')); document.getElementById(tabId).style.display = 'block'; btn.classList.add('active'); }
+    function dismissWarning() { document.getElementById('expiry-banner').style.display = 'none'; }
+    function onPOSItemSelected() { const idx=document.getElementById('pos-item-select').value; const p=document.getElementById('pos-price-override'); if(idx!=="" && window.inventoryQueue[idx]) p.value=(window.inventoryQueue[idx].unit_price||0).toFixed(2); else p.value=""; }
+    function promptVoiceInput(inputId, isNumber=false){
+      const target = document.getElementById(inputId);
+      const status = document.getElementById('scan-status');
+      // Real Speech API
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(SpeechRecognition){
+        const rec = new SpeechRecognition();
+        rec.lang = 'en-US';
+        rec.interimResults = false;
+        if(status) status.innerText = '🎤 Listening... speak now';
+        rec.onresult = (e)=>{
+          let txt = e.results[0][0].transcript;
+          if(isNumber){
+            let num = parseFloat(txt.replace(/[^0-9.]/g,'')||txt.match(/d+/)||0);
+            target.value = isNaN(num)?'0.00':num.toFixed(2);
+          } else {
+            target.value = txt;
+          }
+          if(status) status.innerText = '✅ Voice Captured: "' + txt + '"';
+          if(window.lucide) lucide.createIcons();
+        };
+        rec.onerror = ()=>{
+          // Fallback to typing
+          let val = prompt(isNumber?'Type amount e.g. 1500':'Type value:');
+          if(val){ target.value = isNumber?parseFloat(val.replace(/[^0-9.]/g,'')||0).toFixed(2):val; }
+        };
+        rec.start();
+      } else {
+        // Old browser fallback
+        let val = prompt(isNumber?'Type amount e.g. 1500':'Type value:');
+        if(val){ target.value = isNumber?parseFloat(val.replace(/[^0-9.]/g,'')||0).toFixed(2):val; if(status) status.innerText='✅ Typed: "'+val+'"'; }
+      }
+    }
+    function clearAllData() { if(confirm("Clear inventory, expenses, vault? Accounts will be kept.")){ const sess=localStorage.getItem('retail_user_session'); const users={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('registered_stall_')) users[k]=localStorage.getItem(k);} localStorage.clear(); if(sess) localStorage.setItem('retail_user_session',sess); Object.keys(users).forEach(k=>localStorage.setItem(k,users[k])); window.inventoryQueue=[]; window.expensesList=[]; window.dailyVault=[]; const rev=document.getElementById('daily-revenue-input'); if(rev) rev.value="0.00"; renderInventoryStock(); renderExpenses(); renderVault(); updateMetricsAndProfits(); alert("Inventory cleared, accounts kept."); } }
+    window.saveStateToCloud = function() { localStorage.setItem('retail_inventory', JSON.stringify(window.inventoryQueue)); localStorage.setItem('retail_expenses', JSON.stringify(window.expensesList)); localStorage.setItem('retail_vault', JSON.stringify(window.dailyVault)); }
+    function addNewStockBatch() { const item=document.getElementById('add-item').value.trim(); const vendor=document.getElementById('add-vendor').value.trim()||"Local Supplier"; const qty=parseInt(document.getElementById('add-qty').value); const price=parseFloat(document.getElementById('add-price').value)||0; const expiry=document.getElementById('add-expiry').value; if(!item||isNaN(qty)||!expiry){alert("Fill item, qty, expiry");return;} window.inventoryQueue.push({id:Date.now(), date:new Date().toLocaleDateString(), item, vendor, qty_supplied:qty, qty_remaining:qty, unit_price:price, expiry, sales_count:0}); document.getElementById('add-item').value=''; document.getElementById('add-vendor').value=''; document.getElementById('add-qty').value=''; document.getElementById('add-price').value=''; document.getElementById('add-expiry').value=''; renderInventoryStock(); window.saveStateToCloud(); }
+    function updateMetricsAndProfits() { const totalRev=window.dailyVault.reduce((acc,curr)=>{ if(curr.amount&&curr.amount.startsWith('+')){ return acc+parseFloat(curr.amount.replace('+ZMW ','').replace(',',''));} return acc;},0); const totalExp=window.expensesList.reduce((acc,curr)=>acc+Number(curr.amount||0),0); const netProfit=totalRev-totalExp; const profitEl=document.getElementById('metric-profit'); if(profitEl){ profitEl.innerText=`ZMW ${netProfit.toFixed(2)}`; profitEl.style.color=netProfit>=0?'#10b981':'#ef4444';} const biggestExpEl=document.getElementById('metric-biggest-exp'); if(biggestExpEl&&window.expensesList.length>0){ let maxExp=window.expensesList[0]; window.expensesList.forEach(e=>{ if(Number(e.amount)>Number(maxExp.amount)) maxExp=e;}); biggestExpEl.innerText=`${maxExp.item.slice(0,16)} (ZMW ${Number(maxExp.amount).toFixed(2)})`; } else if(biggestExpEl){ biggestExpEl.innerText="None"; } }
+    function renderInventoryStock(){ const tbody=document.getElementById('inventory-table-body'); const select=document.getElementById('pos-item-select'); const banner=document.getElementById('expiry-banner'); if(!tbody) return; tbody.innerHTML=''; if(select) select.innerHTML='<option value=\"\">Select item to sell...</option>'; if(window.inventoryQueue.length===0){ tbody.innerHTML='<tr><td colspan=\"7\" style=\"text-align:center; color:#94a3b8; padding:2rem;\">No active stock batches.</td></tr>'; document.getElementById('metric-fast').innerText='0'; document.getElementById('metric-near').innerText='0'; document.getElementById('metric-slow').innerText='0'; if(banner) banner.style.display='none'; updateMetricsAndProfits(); return;} let fastCount=0, nearCount=0, slowCount=0; let nearExpiryNames=[]; window.inventoryQueue.forEach((batch,index)=>{ const daysLeft=Math.ceil((new Date(batch.expiry)-new Date())/(1000*60*60*24)); const isNear=daysLeft<=3; const isOut=batch.qty_remaining<=0; let aiAction=''; if(isOut) aiAction='<span style=\"background:rgba(239,68,68,0.2); color:#ef4444; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;\">🛒 Reorder</span>'; else if(isNear){ nearCount++; nearExpiryNames.push(batch.item); aiAction='<span style=\"background:rgba(245,158,11,0.2); color:#f59e0b; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;\">🏷️ Flash Sale</span>';} else if(batch.sales_count>=3){ fastCount++; aiAction='<span style=\"background:rgba(16,185,129,0.2); color:#10b981; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;\">🔥 Fast Mover</span>';} else if(batch.qty_remaining/batch.qty_supplied>0.8 && batch.sales_count===0){ slowCount++; aiAction='<span style=\"background:rgba(239,68,68,0.15); color:#ef4444; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;\">🐢 Stagnant</span>';} else aiAction='<span style=\"background:rgba(59,130,246,0.15); color:#60a5fa; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;\">⚡ Stable</span>'; const tr=document.createElement('tr'); tr.innerHTML=`<td>${batch.date}</td><td><strong>${batch.item}</strong><br><span style=\"font-size:0.75rem; color:#94a3b8;\">${batch.vendor}</span>${isOut?'<br><span style=\"color:#ef4444; font-size:0.7rem; font-weight:800;\">🔴 OUT OF STOCK</span>':''}</td><td>${batch.qty_supplied}</td><td><strong style=\"color:${isOut?'#ef4444':'#10b981'};\">${batch.qty_remaining}</strong></td><td>ZMW ${(batch.unit_price||0).toFixed(2)}</td><td>${aiAction}<br><span style=\"font-size:0.75rem;\">${daysLeft<=0?'⚠️ Expired':daysLeft+' days'}</span></td><td><button class=\"kwacha-btn\" onclick=\"adjustStock(${index},-1)\">-1</button><button class=\"kwacha-btn\" onclick=\"adjustStock(${index},1)\">+1</button></td>`; tbody.appendChild(tr); if(!isOut && select){ const opt=document.createElement('option'); opt.value=index; opt.textContent=`${batch.item} (Avail: ${batch.qty_remaining})`; select.appendChild(opt);} }); document.getElementById('metric-fast').innerText=fastCount; document.getElementById('metric-near').innerText=nearCount; document.getElementById('metric-slow').innerText=slowCount; if(nearCount>0){ if(banner) banner.style.display='flex'; document.getElementById('expiry-banner-text').innerText=`WARNING: ${nearExpiryNames.join(', ')}`; } else if(banner) banner.style.display='none'; updateMetricsAndProfits(); }
+    function adjustStock(i,d){ window.inventoryQueue[i].qty_remaining+=d; if(window.inventoryQueue[i].qty_remaining<0) window.inventoryQueue[i].qty_remaining=0; renderInventoryStock(); window.saveStateToCloud(); }
+    function deductPOSSale(){ const idx=document.getElementById('pos-item-select').value; const qty=parseInt(document.getElementById('pos-qty').value); const custom=parseFloat(document.getElementById('pos-price-override').value); if(idx===""||isNaN(qty)||qty<=0){alert("Select item and qty");return;} const batch=window.inventoryQueue[idx]; if(qty>batch.qty_remaining){alert("Only "+batch.qty_remaining+" left");return;} batch.qty_remaining-=qty; batch.sales_count=(batch.sales_count||0)+qty; const unitPrice=!isNaN(custom)&&custom>0?custom:Number(batch.unit_price||50); const sale=qty*unitPrice; const rev=document.getElementById('daily-revenue-input'); rev.value=(parseFloat(rev.value||0)+sale).toFixed(2); window.dailyVault.unshift({date:new Date().toLocaleString(), type:"POS Sale (FIFO)", details:batch.item+" (x"+qty+")", amount:"+ZMW "+sale.toFixed(2), status:"Revenue Logged", image:null}); renderVault(); renderInventoryStock(); window.saveStateToCloud(); alert("Sold "+qty+" for ZMW "+sale.toFixed(2)); }
+    function addManualExpenseRow(){ window.expensesList.push({item:"General Supplier Purchase", amount:150}); renderExpenses(); window.saveStateToCloud(); }
+    function renderExpenses(){ const c=document.getElementById('expenses-container'); if(!c) return; c.innerHTML=''; let total=0; window.expensesList.forEach((exp,idx)=>{ total+=Number(exp.amount); const div=document.createElement('div'); div.style.display='grid'; div.style.gridTemplateColumns='2fr 1fr auto'; div.style.gap='0.5rem'; div.innerHTML=`<input type="text" class="input-field" value="${exp.item}" onchange="updateExpenseItem(${idx},'item',this.value)"><input type="number" class="input-field" value="${exp.amount}" step="0.01" onchange="updateExpenseItem(${idx},'amount',this.value)"><button class="btn btn-danger" style="width:auto; padding:0.4rem;" onclick="removeExpense(${idx})">✕</button>`; c.appendChild(div);}); const lbl=document.getElementById('expense-count-label'); if(lbl) lbl.innerText=`EXPENSES (${window.expensesList.length})`; document.getElementById('total-expenses-display').innerText=`ZMW ${total.toFixed(2)}`; updateMetricsAndProfits(); }
+    function updateExpenseItem(i,f,v){ window.expensesList[i][f]=f==='amount'?parseFloat(v)||0:v; renderExpenses(); window.saveStateToCloud(); }
+    function removeExpense(i){ window.expensesList.splice(i,1); renderExpenses(); window.saveStateToCloud(); }
+    function addKwacha(a){ const inp=document.getElementById('daily-revenue-input'); inp.value=(parseFloat(inp.value||0)+a).toFixed(2); }
+    function resetRevenue(){ document.getElementById('daily-revenue-input').value="0.00"; }
+    function calculateAndSaveLedger(){ const rev=parseFloat(document.getElementById('daily-revenue-input').value)||0; const totalExp=window.expensesList.reduce((a,c)=>a+Number(c.amount),0); const net=rev-totalExp; window.dailyVault.unshift({date:new Date().toLocaleString(), type:"Daily Ledger Closeout", details:`Revenue: ZMW ${rev.toFixed(2)} | Expenses: ZMW ${totalExp.toFixed(2)}`, amount:"+ZMW "+net.toFixed(2), status:net>=0?"Net Profit":"Net Loss", image:null}); renderVault(); updateMetricsAndProfits(); window.saveStateToCloud(); alert("Ledger saved! Net: ZMW "+net.toFixed(2)); }
+    async function handleSupplierReceiptUpload(e){ const file=e.target.files[0]; if(!file) return; const status=document.getElementById('scan-status'); status.innerText="⏳ AI analyzing receipt via Render backend... (may wake up 30s)"; const fd=new FormData(); fd.append("receipt",file); try{ const res=await fetch("https://retail-daily-ledger-ai.onrender.com/upload",{method:"POST",body:fd}); if(!res.ok) throw new Error("Server fail"); const result=await res.json(); if(!result || result.DocumentType==="Irrelevant"){ status.innerText="❌ AI Rejected: Irrelevant document"; return;} const vendor=result.Vendor||"Scanned Supplier"; const total=Number(result.Total||0); window.expensesList.push({item:vendor, amount:total}); renderExpenses(); if(result.Items){ result.Items.forEach(item=>{ window.inventoryQueue.push({id:Date.now()+Math.random(), date:new Date().toLocaleDateString(), item:item.name||'Scanned Product', vendor, qty_supplied:Number(item.quantity||1), qty_remaining:Number(item.quantity||1), unit_price:Number(item.unit_price||item.price||0), expiry:item.expiry_date||new Date(Date.now()+90*24*60*60*1000).toISOString().split('T')[0], sales_count:0});}); renderInventoryStock();} window.dailyVault.unshift({date:new Date().toLocaleString(), type:"Supplier Receipt", details:vendor, amount:"-ZMW "+total.toFixed(2), status:"Verified AI", image:null}); renderVault(); window.saveStateToCloud(); status.innerText=`✅ Verified "${vendor}" ZMW ${total}!`; }catch(err){ status.innerText="❌ Upload failed: "+err.message;} }
+    async function handleZReportUpload(e){ const file=e.target.files[0]; if(!file) return; const status=document.getElementById('scan-status'); status.innerText="⏳ AI analyzing Z-Report via backend..."; const fd=new FormData(); fd.append("receipt",file); try{ const res=await fetch("https://retail-daily-ledger-ai.onrender.com/upload",{method:"POST",body:fd}); if(!res.ok) throw new Error("Server error"); const result=await res.json(); if(!result || result.DocumentType==="Irrelevant"){ status.innerText="❌ AI Rejected: Not valid Z-Report"; return;} const zTotal=Number(result.Total||0); const rev=document.getElementById('daily-revenue-input'); rev.value=(parseFloat(rev.value||0)+zTotal).toFixed(2); window.dailyVault.unshift({date:new Date().toLocaleString(), type:"Z-Report Scan", details:"Verified Register Summary", amount:"+ZMW "+zTotal.toFixed(2), status:"Verified AI", image:null}); renderVault(); window.saveStateToCloud(); status.innerText=`✅ Z-Report Added ZMW ${zTotal.toFixed(2)}`; }catch(err){ status.innerText="❌ Error: "+err.message;} }
+    function renderVault(){ const tbody=document.getElementById('vault-table-body'); if(!tbody) return; tbody.innerHTML=''; if(window.dailyVault.length===0){ tbody.innerHTML='<tr><td colspan=\"6\" style=\"text-align:center; color:#94a3b8; padding:2rem;\">No saved records yet.</td></tr>'; return;} window.dailyVault.forEach(rec=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${rec.date}</td><td><strong>${rec.type}</strong></td><td>${rec.details}</td><td><strong style=\"color:${rec.amount.startsWith('+')?'#10b981':'#ef4444'};\">${rec.amount}</strong></td><td><span style=\"padding:0.2rem 0.5rem; background:rgba(16,185,129,0.15); color:#10b981; border-radius:4px; font-size:0.75rem; font-weight:700;\">${rec.status}</span></td><td>${rec.image?'View':''}</td>`; tbody.appendChild(tr);}); updateMetricsAndProfits(); }
+    function exportCSV(){ if(window.dailyVault.length===0){alert("No data");return;} let csv="Date,Type,Details,Amount,Status\n"; window.dailyVault.forEach(r=>{ csv+=`\"${r.date}\",\"${r.type}\",\"${r.details}\",\"${r.amount}\",\"${r.status}\"\n`;}); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`Retail_Ledger_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
+    function shareWhatsApp(){ const text=encodeURIComponent("📊 Retail Daily Ledger AI Summary"); window.open(`https://api.whatsapp.com/send?text=${text}`,'_blank'); }
+</script>
+</body>
+</html>
