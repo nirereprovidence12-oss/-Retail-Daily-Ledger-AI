@@ -76,6 +76,8 @@
     .kwacha-btn { padding: 0.4rem 0.8rem; background: #0f172a; border: 1px solid var(--border-dark); color: var(--text-main); border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
     .footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--text-muted); margin-top: auto; }
   </style>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
   <div id="landing-screen">
@@ -284,5 +286,25 @@
     function exportCSV(){ if(window.dailyVault.length===0){alert("No data");return;} let csv="Date,Type,Details,Amount,Status\n"; window.dailyVault.forEach(r=>{ csv+=`\"${r.date}\",\"${r.type}\",\"${r.details}\",\"${r.amount}\",\"${r.status}\"\n`;}); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`Retail_Ledger_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
     function shareWhatsApp(){ const text=encodeURIComponent("📊 Retail Daily Ledger AI Summary"); window.open(`https://api.whatsapp.com/send?text=${text}`,'_blank'); }
 </script>
-<script src="fixes.js?v=11?v=8?v=FINAL7"></script></body>
+<script src="fixes.js?v=11?v=8?v=FINAL7"></script>
+<!-- BARCODE SCANNER + PWA -->
+<div id="barcode-scanner" style="margin:20px 0;padding:15px;border:1px solid #ddd;border-radius:12px">
+  <h3>📦 Barcode Scanner</h3>
+  <div id="reader" style="width:100%"></div>
+  <button id="start-barcode" style="padding:10px 20px;background:#0f172a;color:white;border-radius:8px">Start Barcode Scan</button>
+  <p id="barcode-result" style="font-weight:bold"></p>
+</div>
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+const resultEl = document.getElementById('barcode-result');
+document.getElementById('start-barcode')?.addEventListener('click', () => {
+  const html5Qr = new Html5Qrcode("reader");
+  html5Qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+    (decoded) => { resultEl.innerText = "Scanned: " + decoded; html5Qr.stop(); },
+    (err) => {}
+  );
+});
+</script>
+
+</body>
 </html>
