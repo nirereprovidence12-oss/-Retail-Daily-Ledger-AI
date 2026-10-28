@@ -305,9 +305,72 @@
 
 <script>
 let html5QrInstance = null;
+let isScanning = false;
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js').catch(()=>{}); }
 
-document.getElementById('start-barcode')?.addEventListener('click', () => {
+async function startScan(){
+  const readerEl = document.getElementById('reader');
+  const resultEl = document.getElementById('barcode-result');
+  const stopBtn = document.getElementById('stop-barcode');
+  const startBtn = document.getElementById('start-barcode');
+  if(isScanning) return;
+  resultEl.innerText='Requesting camera...';
+  resultEl.style.color='#fbbf24';
+  try{
+    if(typeof Html5Qrcode === 'undefined'){
+      resultEl.innerText='❌ Library not loaded, check internet';
+      resultEl.style.color='#ef4444';
+      return;
+    }
+    html5QrInstance = new Html5Qrcode("reader");
+    isScanning=true;
+    startBtn.style.display='none';
+    stopBtn.style.display='block';
+    resultEl.innerText='📷 Scanning... point at barcode';
+    resultEl.style.color='#10b981';
+    await html5QrInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: {width:250,height:150} },
+      (decoded) => { 
+        resultEl.innerText = "✅ Scanned: " + decoded; 
+        document.getElementById('add-item').value = decoded;
+        if(navigator.vibrate) navigator.vibrate(200);
+        setTimeout(()=>{ stopScan(); }, 1200);
+      },
+      (err) => {}
+    );
+  }catch(err){
+    isScanning=false;
+    resultEl.innerText='❌ Camera error: '+err+' (use HTTPS + Allow)';
+    resultEl.style.color='#ef4444';
+    startBtn.style.display='block';
+    stopBtn.style.display='none';
+  }
+}
+function stopScan(){
+  const stopBtn = document.getElementById('stop-barcode');
+  const startBtn = document.getElementById('start-barcode');
+  const resultEl = document.getElementById('barcode-result');
+  if(html5QrInstance && isScanning){
+    html5QrInstance.stop().then(()=>{
+      html5QrInstance.clear();
+      isScanning=false;
+      document.getElementById('reader').innerHTML='';
+      stopBtn.style.display='none';
+      startBtn.style.display='block';
+      startBtn.innerText='📷 Start Barcode Scan';
+      resultEl.innerText='Scanner closed';
+    }).catch(()=>{
+      isScanning=false;
+      stopBtn.style.display='none';
+      startBtn.style.display='block';
+    });
+  } else {
+    isScanning=false;
+    stopBtn.style.display='none';
+    startBtn.style.display='block';
+  }
+}
+document.getElementById('start-barcode')?.addEventListener('click', startScan);
+
   const readerEl = document.getElementById('reader');
   const resultEl = document.getElementById('barcode-result');
   const stopBtn = document.getElementById('stop-barcode');
@@ -333,24 +396,9 @@ document.getElementById('start-barcode')?.addEventListener('click', () => {
   });
 });
 
-function stopScanner(){
-  const stopBtn = document.getElementById('stop-barcode');
-  const startBtn = document.getElementById('start-barcode');
-  if(html5QrInstance){
-    html5QrInstance.stop().then(()=>{
-      html5QrInstance.clear();
-      document.getElementById('reader').innerHTML='';
-      stopBtn.style.display='none';
-      startBtn.style.display='block';
-      startBtn.innerText='📷 Start Barcode Scan';
-    }).catch(()=>{});
-  } else {
-    stopBtn.style.display='none';
-    startBtn.style.display='block';
-  }
 }
 
-document.getElementById('stop-barcode')?.addEventListener('click', stopScanner);
+document.getElementById('stop-barcode')?.addEventListener('click', stopScan);
 </script>
 </body>
 
