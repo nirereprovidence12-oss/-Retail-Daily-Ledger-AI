@@ -542,46 +542,60 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
-    window.handleAuthAction = function(e) {
-      e.preventDefault();
-      const email = document.getElementById('auth-email').value.trim();
-      const pass = document.getElementById('auth-password').value;
-      const stallName = document.getElementById('auth-stall-name').value.trim();
-      const btnText = document.getElementById('auth-btn-text');
-      const btnIcon = document.getElementById('auth-btn-icon');
+   window.handleAuthAction = function(e) {
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  const stallName = document.getElementById('auth-stall-name').value.trim();
+  const btnText = document.getElementById('auth-btn-text');
 
-      if (!email || !pass) {
-        alert("Please enter both email and password.");
-        return;
-      }
+  if (!email || !pass) {
+    alert("Please enter both email and password.");
+    return;
+  }
 
-      if (currentAuthMode === 'signup') {
-        if (!stallName) {
-          alert("Please enter your Stall or Business Name to register.");
-          return;
-        }
-        localStorage.setItem('registered_stall_' + email, JSON.stringify({ email, stallName, pass }));
-        document.getElementById('reg-success-banner').style.display = 'block';
+  if (currentAuthMode === 'signup') {
+    if (!stallName) {
+      alert("Please enter your Stall or Business Name to register.");
+      return;
+    }
+    // Check if already exists
+    if (localStorage.getItem('registered_stall_' + email)) {
+        alert("Account already exists. Please Sign In.");
         setAuthMode('signin');
-        document.getElementById('auth-email').value = email;
-        document.getElementById('auth-password').value = '';
         return;
-      }
+    }
+    localStorage.setItem('registered_stall_' + email, JSON.stringify({ email, stallName, pass }));
+    document.getElementById('reg-success-banner').style.display = 'block';
+    setAuthMode('signin');
+    document.getElementById('auth-email').value = email;
+    document.getElementById('auth-password').value = '';
+    return;
+  }
 
-      btnText.innerText = "Connecting to Secure Cloud...";
-      if (btnIcon) btnIcon.setAttribute('data-lucide', 'loader');
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+  // SIGN IN - THIS IS THE FIX
+  if (currentAuthMode === 'signin') {
+    const storedReg = JSON.parse(localStorage.getItem('registered_stall_' + email) || 'null');
+    
+    if (!storedReg) {
+      alert("No account found for this email. Please Create Account first.");
+      return;
+    }
 
-      setTimeout(() => {
-        const storedReg = JSON.parse(localStorage.getItem('registered_stall_' + email) || '{}');
-        const activeStall = storedReg.stallName || email.split('@')[0];
-        
-        const session = { email, stallName: activeStall, isGuest: false, loggedInAt: new Date().toISOString() };
-        localStorage.setItem('retail_user_session', JSON.stringify(session));
-        window.enterAppSession(email, false, activeStall);
-      }, 1000);
-    };
+    // THIS LINE WAS MISSING - NOW IT CHECKS PASSWORD
+    if (storedReg.pass !== pass) {
+      alert("Wrong password! Password does not match the one you registered with.");
+      return;
+    }
 
+    btnText.innerText = "Connecting to Secure Cloud...";
+    setTimeout(() => {
+      const session = { email, stallName: storedReg.stallName, isGuest: false, loggedInAt: new Date().toISOString() };
+      localStorage.setItem('retail_user_session', JSON.stringify(session));
+      window.enterAppSession(email, false, storedReg.stallName);
+    }, 500);
+  }
+};
     window.startGuestDemo = function() {
       const guestBtn = document.getElementById('guest-btn');
       guestBtn.innerHTML = `<span>Loading Guest Environment...</span>`;

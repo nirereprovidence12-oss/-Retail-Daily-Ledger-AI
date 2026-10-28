@@ -131,7 +131,7 @@
         </div>
         <h1 class="hero-title">Intelligent POS & Stock Engine for Micro-Retailers</h1>
         <p class="hero-subtitle">
-          Eliminate inventory spoilage, automate expense tracking via AI receipt scanning, and sync multi-device stall ledgers online & offline.
+          Eliminate inventory spoilage, automate expense tracking via AI receipt scanning, and sync multi-device stall ledgers—online & offline.
         </p>
 
         <div class="feature-grid">
@@ -165,7 +165,7 @@
           <p class="auth-desc" id="auth-form-desc">Access your synced stall ledger and inventory</p>
         </div>
 
-        <div id="tier-badge" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary-emerald); padding: 0.75rem; border-radius: 8px; font-size: 0.8rem; color: var(--primary-emerald); margin-bottom: 1.25rem; text-align: center; font-weight: 700;">
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary-emerald); padding: 0.75rem; border-radius: 8px; font-size: 0.8rem; color: var(--primary-emerald); margin-bottom: 1.25rem; text-align: center; font-weight: 700;">
           💎 Lusaka Pro Tier Active: Unlimited AI Scans & Mobile Money Sync
         </div>
 
@@ -315,7 +315,7 @@
             </div>
           </div>
 
-          <!-- Manual Add Stock Form -->
+          <!-- Manual Add Stock Form (Demand Bar Removed!) -->
           <div style="background: #0f172a; border: 1px solid var(--border-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
             <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.75rem;">+ Add New Supplier Batch</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;">
@@ -517,13 +517,8 @@
 
     window.enterAppSession = function(email, isGuest = false, stallName = '', skipAnimation = false) {
       const displayName = stallName || (email ? email.split('@')[0] : 'Vendor');
-      document.getElementById('user-display').innerText = isGuest ? "Guest Mode (Local Only)" : displayName;
+      document.getElementById('user-display').innerText = isGuest ? "Guest Mode" : displayName;
       
-      const tierBadge = document.getElementById('tier-badge');
-      if (tierBadge) {
-        tierBadge.style.display = isGuest ? 'none' : 'block';
-      }
-
       const btn = document.getElementById('sign-out-or-back-btn');
       if (isGuest) {
         btn.innerText = "← Exit Guest Mode";
@@ -636,34 +631,8 @@
       }
     }
 
+    // BULLETPROOF VOICE PROMPT & INPUT FALLBACK
     function promptVoiceInput(inputId, isNumber = false) {
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.start();
-
-        const statusEl = document.getElementById('scan-status');
-        if (statusEl) statusEl.innerText = "🎤 Listening for voice input...";
-
-        recognition.onresult = function(event) {
-          const speechResult = event.results[0][0].transcript;
-          const target = document.getElementById(inputId);
-          if (target) {
-            target.value = isNumber ? parseFloat(speechResult.replace(/[^0-9.]/g, '') || 0).toFixed(2) : speechResult.trim();
-          }
-          if (statusEl) statusEl.innerText = `✅ Voice Captured: "${speechResult}"`;
-        };
-
-        recognition.onerror = function() {
-          fallbackPrompt(inputId, isNumber);
-        };
-      } else {
-        fallbackPrompt(inputId, isNumber);
-      }
-    }
-
-    function fallbackPrompt(inputId, isNumber) {
       const promptMsg = isNumber ? "Speak or type numeric value (e.g. 1500):" : "Speak or type text:";
       const val = prompt(promptMsg);
       if (val !== null && val.trim() !== "") {
@@ -672,7 +641,7 @@
           target.value = isNumber ? parseFloat(val.replace(/[^0-9.]/g, '') || 0).toFixed(2) : val.trim();
         }
         const statusEl = document.getElementById('scan-status');
-        if (statusEl) statusEl.innerText = `✅ Input Captured: "${val}"`;
+        if (statusEl) statusEl.innerText = `✅ Voice/Dictation Captured: "${val}"`;
       }
     }
 
@@ -788,6 +757,7 @@
         const isNearOrExpired = daysLeft <= 3;
         const isOutOfStock = batch.qty_remaining <= 0;
 
+        // AUTOMATED AI ACTION RECOMMENDATIONS
         let aiActionHtml = '';
         if (isOutOfStock) {
           aiActionHtml = `<span style="background:rgba(239, 68, 68, 0.2); color:var(--red-danger); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:800;">🛒 Reorder Immediately</span>`;
@@ -1001,9 +971,8 @@
 
         const result = await response.json().catch(() => null);
 
-        // STRICT REJECTION CHECK
-        if (!result || result.DocumentType === "Irrelevant" || result.DocumentType === "ZReport" || (!result.Vendor && !result.Total)) {
-          statusEl.innerText = "❌ AI Rejected: This is not a valid supplier receipt. Please upload an appropriate invoice or receipt.";
+        if (!result || result.DocumentType === "Irrelevant" || (!result.Vendor && !result.Total && (!result.Items || result.Items.length === 0))) {
+          statusEl.innerText = "❌ AI Rejected: Irrelevant document detected. Please upload a valid supplier receipt.";
           return;
         }
 
@@ -1065,8 +1034,7 @@
 
         const result = await response.json().catch(() => null);
 
-        // STRICT REJECTION CHECK
-        if (!result || result.DocumentType === "Irrelevant" || result.DocumentType === "Receipt" || (!result.Total && (!result.Items || result.Items.length === 0))) {
+        if (!result || result.DocumentType === "Irrelevant" || (!result.Total && (!result.Items || result.Items.length === 0))) {
           statusEl.innerText = "❌ AI Rejected: Not a valid Z-Report. Please upload a proper sales register summary.";
           return;
         }
@@ -1076,10 +1044,22 @@
         const currentRev = parseFloat(revInput.value) || 0;
         revInput.value = (currentRev + zTotal).toFixed(2);
 
+        if (result.Items && Array.isArray(result.Items)) {
+          result.Items.forEach(soldItem => {
+            const match = window.inventoryQueue.find(b => b.item.toLowerCase().includes((soldItem.name || '').toLowerCase()) && b.qty_remaining > 0);
+            if (match) {
+              const soldQty = Number(soldItem.quantity || 1);
+              match.qty_remaining = Math.max(0, match.qty_remaining - soldQty);
+              match.sales_count = (match.sales_count || 0) + soldQty;
+            }
+          });
+          renderInventoryStock();
+        }
+
         window.dailyVault.unshift({
           date: new Date().toLocaleString(),
           type: "Z-Report Scan",
-          details: "Verified Register Summary",
+          details: "Verified Register Summary & Inventory Deduct",
           amount: `+ZMW ${zTotal.toFixed(2)}`,
           status: "Verified AI",
           image: base64Image
